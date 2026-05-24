@@ -1,0 +1,35 @@
+# Raw data (too large for GitHub, ~124MB)
+data/raw/
+
+# Generated outputs (reproducible by running the pipeline)
+outputs/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+
+# Environment
+.env
+*.env
+venv/
+.venv/
+
+# macOS
+.DS_Store
+
+# Claude Code project files
+.claude/
+.cache/
+
+# IDE
+.vscode/
+.idea/
+
+# Pickle model files (large, reproducible)
+outputs/models/

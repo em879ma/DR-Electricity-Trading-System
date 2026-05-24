@@ -1,0 +1,43 @@
+data:
+  country_code: "DE"
+  start: "2018-01-01"
+  end: "2018-12-31 23:00:00"
+  local_cache_path: "data/raw/opsd_time_series_60min_singleindex.csv"
+
+forecast:
+  horizons: [1, 2, 3, 6, 12, 24]
+  rf:
+    n_estimators: 300
+    max_depth: 12
+    min_samples_leaf: 1
+    random_state: 42
+  split:
+    train_ratio: 0.7
+    valid_ratio: 0.15
+
+scenario:
+  method: "bootstrap"
+  n_scenarios: 48
+  block_bootstrap: true
+  block_length: 24
+  random_seed: 42
+
+decision:
+  flexibility_ratios: [0.05, 0.10, 0.15]
+  objective_modes: ["average_cost", "high_price_only", "cvar_tail"]
+  c_dr: 3.0
+  penalty_rate: 20.0
+  min_load_ratio: 0.70
+  low_price_threshold: 0.0
+  low_price_probability_threshold: 0.30
+
+strengthen:
+  # Move forecast origin forward between event-study batches (720h ≈ monthly; larger = faster)
+  event_study_origin_stride_hours: 720
+  # Scenario count for aggregated blocks (reuse global scenario.n_scenarios when null)
+  event_study_scenarios_per_block: 30
+  # Cap batches to keep event-study aggregation tractable (~8–12 batches typical)
+  event_study_max_blocks: 10
+
+output:
+  root: "outputs"
