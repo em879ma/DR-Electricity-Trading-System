@@ -5,6 +5,7 @@ data:
   local_cache_path: "data/raw/opsd_time_series_60min_singleindex.csv"
 
 forecast:
+  model: "xgboost"
   horizons: [1, 2, 3, 6, 12, 24]
   rf:
     n_estimators: 300
@@ -14,6 +15,9 @@ forecast:
   split:
     train_ratio: 0.7
     valid_ratio: 0.15
+  two_stage:
+    boundary_price: 10.0   # hours with price < boundary used for neg-regime regressor
+    min_neg_samples: 20    # minimum low-price training samples; fallback to single RF if fewer
 
 scenario:
   method: "bootstrap"

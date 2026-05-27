@@ -14,7 +14,8 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.append(str(PROJECT_ROOT))
 
-from src.forecasting import forecast_rf_day_ahead, fit_negative_price_binary_forecast, reshape_day_ahead_forecasts, write_rf_outputs
+from src.forecasting import forecast_rf_day_ahead, reshape_day_ahead_forecasts, write_rf_outputs
+from src.forecaster import fit_price_forecast
 from src.calibration import (
     calibrate_forecasts,
     reshape_calibrated_day_ahead_forecasts,
@@ -34,13 +35,37 @@ def main(config_path: str = "config.yaml") -> None:
     print("Loading market panel with DR features...")
     dr_df = pd.read_csv(dr_path, parse_dates=["datetime"])
 
-    print("Running RF day-ahead forecast (baseline model, not optimized price)...")
+    model_name = cfg["forecast"].get("model", "two_stage_rf")
+
+    print("Running RF day-ahead forecast (load & renewable targets)...")
     rf_raw_long, rf_acc = forecast_rf_day_ahead(
         dr_df,
         horizons=cfg["forecast"]["horizons"],
         rf_params=cfg["forecast"]["rf"],
         split=cfg["forecast"]["split"],
     )
+
+    print(f"Fitting price model '{model_name}' (H=24)...")
+    ts_pred_df, ts_acc_df, neg_price_df, ts_metrics = fit_price_forecast(
+        dr_df,
+        model_name=model_name,
+        split=cfg["forecast"]["split"],
+        rf_params=cfg["forecast"]["rf"],
+        horizon=24,
+    )
+    if not ts_pred_df.empty:
+        # Replace H=24 price rows from single-RF with selected model predictions
+        price_h24 = (rf_raw_long["target"] == "price") & (rf_raw_long["horizon"] == 24)
+        rf_raw_long = pd.concat(
+            [rf_raw_long[~price_h24], ts_pred_df], ignore_index=True
+        ).sort_values("target_datetime").reset_index(drop=True)
+        price_h24_acc = (rf_acc["target"] == "price") & (rf_acc["horizon"] == 24)
+        rf_acc = pd.concat(
+            [rf_acc[~price_h24_acc], ts_acc_df], ignore_index=True
+        ).reset_index(drop=True)
+        print(f"  neg-price recall:    {ts_metrics.get('negative_price_recall_classifier', float('nan')):.3f}")
+        print(f"  neg-price precision: {ts_metrics.get('negative_price_precision_classifier', float('nan')):.3f}")
+        print(f"  classifier threshold: {ts_metrics.get('classifier_threshold', 0.5):.3f}")
 
     tables_dir = Path(out_root) / "tables"
     tables_dir.mkdir(parents=True, exist_ok=True)
@@ -49,29 +74,17 @@ def main(config_path: str = "config.yaml") -> None:
 
     day_ahead_rf_raw = reshape_day_ahead_forecasts(rf_raw_long, horizon=24)
     write_rf_outputs(day_ahead_rf_raw, rf_acc, output_root=out_root)
-    print(f"  RF forecast rows: {len(rf_raw_long)}")
+    print(f"  Total forecast rows: {len(rf_raw_long)}")
 
     print("Calibrating forecasts...")
     rf_cal_long, calibration_summary = calibrate_forecasts(rf_raw_long)
     write_calibration_outputs(rf_cal_long, calibration_summary, output_root=out_root)
     day_ahead_rf = reshape_calibrated_day_ahead_forecasts(rf_cal_long, horizon=24)
     day_ahead_rf.to_csv(tables_dir / "day_ahead_rf_forecasts.csv", index=False)
-    rf_cal_long.to_csv(tables_dir / "rf_calibrated_forecasts.csv", index=False)
-    print(calibration_summary.to_string(index=False))
-
-    print("Fitting negative-price binary classifier...")
-    neg_price_df, neg_metrics = fit_negative_price_binary_forecast(
-        dr_df,
-        rf_params=cfg["forecast"]["rf"],
-        split=cfg["forecast"]["split"],
-        horizon=24,
-    )
     if not neg_price_df.empty:
         rf_cal_long = rf_cal_long.merge(neg_price_df, on="target_datetime", how="left")
-        rf_cal_long.to_csv(tables_dir / "rf_calibrated_forecasts.csv", index=False)
-        print(f"  negative_price_recall_classifier: {neg_metrics.get('negative_price_recall_classifier', float('nan')):.3f}")
-        print(f"  negative_price_precision_classifier: {neg_metrics.get('negative_price_precision_classifier', float('nan')):.3f}")
-        print(f"  classifier_threshold: {neg_metrics.get('classifier_threshold', 0.5):.3f}")
+    rf_cal_long.to_csv(tables_dir / "rf_calibrated_forecasts.csv", index=False)
+    print(calibration_summary.to_string(index=False))
 
     print("Generating bootstrap scenarios...")
     resid_input = rf_cal_long.copy()
