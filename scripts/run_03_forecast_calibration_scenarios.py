@@ -46,12 +46,20 @@ def main(config_path: str = "config.yaml") -> None:
     )
 
     print(f"Fitting price model '{model_name}' (H=24)...")
+    extra_kwargs = {}
+    if "xgb_params" in cfg["forecast"]:
+        extra_kwargs["xgb_params"] = cfg["forecast"]["xgb_params"]
+        print(f"  Using tuned xgb_params from config ({len(extra_kwargs['xgb_params'])} keys)")
+    feature_set = cfg["forecast"].get("feature_set", "full")
+    print(f"  feature_set = {feature_set}")
     ts_pred_df, ts_acc_df, neg_price_df, ts_metrics = fit_price_forecast(
         dr_df,
         model_name=model_name,
         split=cfg["forecast"]["split"],
         rf_params=cfg["forecast"]["rf"],
         horizon=24,
+        feature_set=feature_set,
+        **extra_kwargs,
     )
     if not ts_pred_df.empty:
         # Replace H=24 price rows from single-RF with selected model predictions

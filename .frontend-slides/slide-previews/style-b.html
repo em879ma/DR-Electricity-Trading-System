@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Style B — Command Bold</title>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Space+Grotesk:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --bg: #111111;
+  --surface: #1a1a1a;
+  --orange: #E85D04;
+  --orange-light: #FF6B1A;
+  --text: #ffffff;
+  --muted: #888888;
+  --border: rgba(255,255,255,0.08);
+}
+html, body {
+  width: 100%; min-height: 100vh;
+  background: var(--bg); color: var(--text);
+  font-family: 'Space Grotesk', sans-serif;
+}
+
+nav {
+  position: fixed; top: 0; left: 0; right: 0;
+  padding: 28px 80px;
+  display: flex; align-items: center; justify-content: space-between;
+  z-index: 100;
+  opacity: 0; animation: fade 0.5s ease forwards 0.15s;
+}
+.logo { font-family: 'Archivo Black', sans-serif; font-size: 22px; }
+.logo em { font-style: normal; color: var(--orange); }
+.nav-right { display: flex; gap: 40px; align-items: center; }
+.nav-right a { font-size: 13px; font-weight: 500; color: var(--muted); text-decoration: none; transition: color 0.2s; }
+.nav-right a:hover { color: var(--text); }
+.nav-cta {
+  background: var(--orange); color: #fff;
+  padding: 10px 24px; font-size: 13px; font-weight: 600;
+  border: none; cursor: pointer; font-family: 'Space Grotesk', sans-serif;
+}
+
+/* ── HERO ── */
+.hero {
+  min-height: 100vh;
+  display: grid; grid-template-columns: 1.1fr 0.9fr;
+  align-items: stretch;
+  padding-top: 80px;
+}
+
+/* left column */
+.col-left {
+  padding: 80px 80px 80px;
+  display: flex; flex-direction: column; justify-content: center;
+  position: relative;
+}
+
+.step-num {
+  font-family: 'Archivo Black', sans-serif;
+  font-size: 120px; line-height: 1;
+  color: rgba(255,255,255,0.04);
+  position: absolute; top: 60px; left: 60px;
+  user-select: none; pointer-events: none;
+  opacity: 0; animation: fade 1s ease forwards 0.2s;
+}
+
+.tag {
+  display: inline-flex; align-items: center; gap: 8px;
+  border: 1px solid var(--border);
+  padding: 7px 16px;
+  font-size: 11px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--muted); margin-bottom: 36px; width: fit-content;
+  opacity: 0; animation: slideUp 0.5s ease forwards 0.3s;
+}
+.tag-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--orange); }
+
+h1 {
+  font-family: 'Archivo Black', sans-serif;
+  font-size: clamp(48px, 5vw, 72px);
+  line-height: 1.05; letter-spacing: -2px;
+  margin-bottom: 32px;
+  opacity: 0; animation: slideUp 0.7s ease forwards 0.45s;
+}
+h1 .break { display: block; }
+h1 .o { color: var(--orange); }
+
+.desc {
+  font-size: 17px; line-height: 1.75; color: var(--muted);
+  max-width: 480px; margin-bottom: 52px;
+  opacity: 0; animation: slideUp 0.7s ease forwards 0.6s;
+}
+
+.actions { display: flex; gap: 16px; align-items: center; opacity: 0; animation: slideUp 0.6s ease forwards 0.75s; }
+.btn-main {
+  background: var(--orange); color: #fff;
+  padding: 16px 40px; border: none; cursor: pointer;
+  font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 15px;
+  transition: background 0.2s, transform 0.2s;
+}
+.btn-main:hover { background: var(--orange-light); transform: translateY(-2px); }
+.btn-ghost {
+  background: transparent; color: var(--muted);
+  padding: 16px 32px; border: 1px solid var(--border); cursor: pointer;
+  font-family: 'Space Grotesk', sans-serif; font-size: 15px;
+  transition: color 0.2s, border-color 0.2s;
+}
+.btn-ghost:hover { color: var(--text); border-color: rgba(255,255,255,0.25); }
+
+/* right column — orange feature card */
+.col-right {
+  position: relative;
+  background: var(--orange);
+  display: flex; flex-direction: column; justify-content: flex-end;
+  padding: 60px 64px;
+  overflow: hidden;
+}
+
+/* geometric bg shapes */
+.col-right::before {
+  content: '';
+  position: absolute; top: -80px; right: -80px;
+  width: 320px; height: 320px;
+  border-radius: 50%;
+  border: 60px solid rgba(0,0,0,0.1);
+  opacity: 0; animation: fade 0.8s ease forwards 0.6s;
+}
+.col-right::after {
+  content: '';
+  position: absolute; bottom: 100px; left: -60px;
+  width: 200px; height: 200px;
+  border-radius: 50%;
+  border: 40px solid rgba(0,0,0,0.08);
+}
+
+.card-eyebrow {
+  font-size: 11px; font-weight: 500; letter-spacing: 0.18em; text-transform: uppercase;
+  color: rgba(0,0,0,0.5); margin-bottom: 20px; position: relative; z-index: 1;
+  opacity: 0; animation: slideUp 0.6s ease forwards 0.5s;
+}
+
+.card-headline {
+  font-family: 'Archivo Black', sans-serif;
+  font-size: clamp(36px, 3.5vw, 52px);
+  line-height: 1.1; letter-spacing: -1.5px;
+  color: #111111; position: relative; z-index: 1;
+  margin-bottom: 40px;
+  opacity: 0; animation: slideUp 0.7s ease forwards 0.65s;
+}
+
+.stat-row {
+  display: grid; grid-template-columns: 1fr 1fr 1fr;
+  gap: 1px; background: rgba(0,0,0,0.15);
+  border-top: 1px solid rgba(0,0,0,0.15);
+  position: relative; z-index: 1;
+  opacity: 0; animation: slideUp 0.6s ease forwards 0.85s;
+}
+.stat {
+  background: rgba(0,0,0,0.08);
+  padding: 20px 18px;
+}
+.stat-n {
+  font-family: 'Archivo Black', sans-serif;
+  font-size: 28px; letter-spacing: -1px; color: #111;
+}
+.stat-l { font-size: 11px; font-weight: 500; color: rgba(0,0,0,0.55); margin-top: 2px; }
+
+/* nav breadcrumbs */
+.dots {
+  position: fixed; right: 32px; top: 50%; transform: translateY(-50%);
+  display: flex; flex-direction: column; gap: 10px;
+  z-index: 50;
+  opacity: 0; animation: fade 0.6s ease forwards 0.9s;
+}
+.dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.2); transition: background 0.2s; }
+.dot.active { background: var(--orange); }
+
+@keyframes slideUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: none; } }
+@keyframes fade { to { opacity: 1; } }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">DR<em>Compass</em></div>
+  <div class="nav-right">
+    <a href="#">Product</a>
+    <a href="#">Results</a>
+    <a href="#">API</a>
+    <button class="nav-cta">Get Access</button>
+  </div>
+</nav>
+
+<div class="dots">
+  <div class="dot active"></div>
+  <div class="dot"></div>
+  <div class="dot"></div>
+  <div class="dot"></div>
+  <div class="dot"></div>
+</div>
+
+<section class="hero">
+  <div class="col-left">
+    <div class="step-num">01</div>
+    <div class="tag"><span class="tag-dot"></span>Day-Ahead DR Platform</div>
+    <h1>
+      <span class="break">Turn price</span>
+      <span class="break">volatility into</span>
+      <span class="o">profit.</span>
+    </h1>
+    <p class="desc">XGBoost forecasts 24-hour electricity prices. 48 bootstrap scenarios quantify the risk. The optimizer delivers your demand-response schedule before 12:00 every day.</p>
+    <div class="actions">
+      <button class="btn-main">Schedule Demo</button>
+      <button class="btn-ghost">See How It Works →</button>
+    </div>
+  </div>
+
+  <div class="col-right">
+    <div class="card-eyebrow">Proven Results · EPEX SPOT DE</div>
+    <div class="card-headline">Actionable<br>schedules.<br>Every morning.</div>
+    <div class="stat-row">
+      <div class="stat">
+        <div class="stat-n">€48k</div>
+        <div class="stat-l">Avg. savings</div>
+      </div>
+      <div class="stat">
+        <div class="stat-n">48</div>
+        <div class="stat-l">Scenarios</div>
+      </div>
+      <div class="stat">
+        <div class="stat-n">8/8</div>
+        <div class="stat-l">Guardrails</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+</body>
+</html>

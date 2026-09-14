@@ -139,6 +139,84 @@ def build_hourly_counterfactual_panel(
     })
 
 
+def compute_vss(
+    stochastic_total_cost: float,
+    deterministic_total_cost: float,
+) -> dict:
+    """
+    Value of Stochastic Solution (Birge & Louveaux, 1997).
+
+    VSS = Cost(deterministic-DR) − Cost(stochastic-DR).
+
+    A positive VSS means the scenario-based decision saves more than a
+    decision using only a point forecast. The relative VSS expresses the
+    saving as a fraction of the deterministic baseline cost.
+    """
+    vss = float(deterministic_total_cost) - float(stochastic_total_cost)
+    rel = vss / (abs(float(deterministic_total_cost)) + 1e-9)
+    return {
+        "stochastic_total_cost": float(stochastic_total_cost),
+        "deterministic_total_cost": float(deterministic_total_cost),
+        "VSS_absolute": vss,
+        "VSS_relative": rel,
+    }
+
+
+def compute_regret(
+    model_total_cost: float,
+    perfect_info_total_cost: float,
+) -> dict:
+    """
+    Decision regret vs. perfect-information benchmark.
+
+    Regret = Cost(model-DR) − Cost(perfect-information-DR).
+
+    Regret ≥ 0 by construction; relative regret expresses the loss as a
+    fraction of the perfect-information cost. A small relative regret means
+    the model captures most of the achievable savings.
+    """
+    regret = float(model_total_cost) - float(perfect_info_total_cost)
+    rel = regret / (abs(float(perfect_info_total_cost)) + 1e-9)
+    return {
+        "model_total_cost": float(model_total_cost),
+        "perfect_info_total_cost": float(perfect_info_total_cost),
+        "regret_absolute": regret,
+        "regret_relative": rel,
+    }
+
+
+def perfect_information_oracle_schedule(
+    actual_panel: pd.DataFrame,
+    flexibility_ratio: float = 0.10,
+    c_dr: float = 3.0,
+    low_price_threshold: float = 0.0,
+) -> pd.DataFrame:
+    """
+    Compute the perfect-information DR schedule, i.e. what the optimizer
+    would choose if it knew the realized price for every hour with certainty.
+
+    For each hour `t` the oracle activates full flexibility iff
+        p_actual(t) > c_dr   AND   p_actual(t) > low_price_threshold
+    and zero otherwise. This is the optimal greedy policy when a future
+    price is exactly known (no scenario uncertainty).
+    """
+    df = actual_panel.copy()
+    dt_col = "datetime" if "datetime" in df.columns else "timestamp"
+    df[dt_col] = pd.to_datetime(df[dt_col])
+    if "demand_base" not in df.columns:
+        df["demand_base"] = df["load"]
+
+    activate = (df["price"] > c_dr) & (df["price"] > low_price_threshold)
+    q = activate.astype(float) * (flexibility_ratio * df["demand_base"])
+
+    return pd.DataFrame({
+        "target_datetime": df[dt_col],
+        "actual_price": df["price"].to_numpy(),
+        "demand_base": df["demand_base"].to_numpy(),
+        "q_oracle": q.to_numpy(),
+    })
+
+
 def dr_allocation_by_regime(hourly: pd.DataFrame, price_col: str = "observed_price") -> pd.DataFrame:
     p = hourly[price_col]
     p50, p75, p90 = float(p.quantile(0.5)), float(p.quantile(0.75)), float(p.quantile(0.9))

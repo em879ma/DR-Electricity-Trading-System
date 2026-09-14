@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Style A — Voltage Dark</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --bg: #050d1a;
+  --surface: #0b1827;
+  --cyan: #00c2ff;
+  --amber: #f59e0b;
+  --green: #10b981;
+  --text: #e2e8f0;
+  --muted: #475569;
+}
+html, body { width: 100%; min-height: 100vh; background: var(--bg); color: var(--text); font-family: 'Syne', sans-serif; }
+
+/* grid bg */
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background-image:
+    linear-gradient(rgba(0,194,255,0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,194,255,0.035) 1px, transparent 1px);
+  background-size: 64px 64px;
+  pointer-events: none; z-index: 0;
+}
+/* glow blobs */
+body::after {
+  content: '';
+  position: fixed; top: -30vh; left: -15vw;
+  width: 70vw; height: 70vh;
+  background: radial-gradient(ellipse, rgba(0,194,255,0.07) 0%, transparent 60%);
+  pointer-events: none; z-index: 0;
+}
+
+nav {
+  position: fixed; top: 0; left: 0; right: 0;
+  padding: 26px 72px;
+  display: flex; align-items: center; justify-content: space-between;
+  z-index: 100;
+  background: linear-gradient(to bottom, rgba(5,13,26,0.95), transparent);
+  opacity: 0; animation: up 0.5s ease forwards 0.1s;
+}
+.logo { font-size: 20px; font-weight: 800; letter-spacing: -1px; }
+.logo em { font-style: normal; color: var(--cyan); }
+.nav-links { display: flex; gap: 40px; list-style: none; }
+.nav-links a { font-family: 'Space Mono', monospace; font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); text-decoration: none; transition: color 0.2s; }
+.nav-links a:hover { color: var(--cyan); }
+
+.hero {
+  position: relative; z-index: 1;
+  display: grid; grid-template-columns: 1fr 1fr;
+  min-height: 100vh; align-items: center;
+  padding: 120px 72px 80px;
+  gap: 64px;
+}
+
+.left { display: flex; flex-direction: column; gap: 0; }
+
+.eyebrow {
+  font-family: 'Space Mono', monospace;
+  font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--cyan); margin-bottom: 28px;
+  opacity: 0; animation: up 0.6s ease forwards 0.25s;
+}
+.eyebrow::before { content: '//  '; }
+
+h1 {
+  font-size: clamp(52px, 5.5vw, 80px);
+  font-weight: 800; line-height: 1.0; letter-spacing: -3px;
+  margin-bottom: 28px;
+  opacity: 0; animation: up 0.7s ease forwards 0.4s;
+}
+h1 .accent { color: var(--cyan); text-shadow: 0 0 40px rgba(0,194,255,0.35); }
+h1 .amber { color: var(--amber); }
+
+.desc {
+  font-size: 18px; line-height: 1.7; color: var(--muted);
+  max-width: 500px; margin-bottom: 52px;
+  opacity: 0; animation: up 0.7s ease forwards 0.55s;
+}
+
+.btns { display: flex; gap: 14px; opacity: 0; animation: up 0.6s ease forwards 0.7s; }
+.btn-primary {
+  background: var(--cyan); color: #050d1a;
+  padding: 15px 36px; border: none; cursor: pointer;
+  font-family: 'Syne', sans-serif; font-weight: 700; font-size: 14px;
+  letter-spacing: 0.04em; transition: transform 0.2s, box-shadow 0.2s;
+}
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(0,194,255,0.3); }
+.btn-sec {
+  background: transparent; color: var(--text);
+  padding: 15px 36px; border: 1px solid rgba(255,255,255,0.12); cursor: pointer;
+  font-family: 'Syne', sans-serif; font-size: 14px;
+  transition: border-color 0.2s;
+}
+.btn-sec:hover { border-color: rgba(0,194,255,0.4); }
+
+/* ── right: metrics grid ── */
+.right { position: relative; }
+
+.divider {
+  position: absolute; left: 0; top: 10%; bottom: 10%;
+  width: 1px;
+  background: linear-gradient(to bottom, transparent, rgba(0,194,255,0.25), transparent);
+}
+
+.metrics {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+  padding-left: 48px;
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid rgba(255,255,255,0.06);
+  padding: 32px 28px;
+  transition: border-color 0.3s, transform 0.3s;
+  opacity: 0;
+}
+.card:hover { border-color: rgba(0,194,255,0.2); transform: translateY(-3px); }
+.card:nth-child(1) { animation: up 0.6s ease forwards 0.6s; }
+.card:nth-child(2) { animation: up 0.6s ease forwards 0.73s; }
+.card:nth-child(3) { animation: up 0.6s ease forwards 0.86s; }
+.card:nth-child(4) { animation: up 0.6s ease forwards 0.99s; }
+
+.card.hot { border-color: rgba(245,158,11,0.2); background: linear-gradient(135deg, #0b1827, #150e00); }
+
+.card-label {
+  font-family: 'Space Mono', monospace;
+  font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--muted); margin-bottom: 14px;
+}
+.card-value { font-size: 42px; font-weight: 800; line-height: 1; letter-spacing: -2px; }
+.card-value.c { color: var(--cyan); }
+.card-value.a { color: var(--amber); }
+.card-value.g { color: var(--green); }
+.card-unit { font-family: 'Space Mono', monospace; font-size: 11px; color: var(--muted); margin-top: 6px; }
+
+/* bottom bar */
+.status-bar {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  padding: 14px 72px;
+  display: flex; align-items: center; gap: 32px;
+  background: rgba(5,13,26,0.9);
+  border-top: 1px solid rgba(0,194,255,0.08);
+  font-family: 'Space Mono', monospace; font-size: 10px;
+  color: var(--muted); letter-spacing: 0.1em;
+  z-index: 100;
+  opacity: 0; animation: up 0.5s ease forwards 1.1s;
+}
+.status-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 8px var(--green);
+  animation: pulse 2s ease-in-out infinite;
+}
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+@keyframes up { to { opacity: 1; transform: translateY(0); } }
+.hero .left > *, .card { transform: translateY(24px); }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">DR<em>Compass</em></div>
+  <ul class="nav-links">
+    <li><a href="#">Product</a></li>
+    <li><a href="#">Results</a></li>
+    <li><a href="#">API</a></li>
+    <li><a href="#">Get Access</a></li>
+  </ul>
+</nav>
+
+<section class="hero">
+  <div class="left">
+    <div class="eyebrow">AI-Powered Day-Ahead Demand Response</div>
+    <h1>Your factory's<br><span class="accent">optimal</span><br>energy <span class="amber">deal</span>.<br>Every morning.</h1>
+    <p class="desc">DR Compass combines XGBoost price forecasting with 48-scenario probabilistic planning to deliver actionable demand-response schedules — before the day-ahead market closes.</p>
+    <div class="btns">
+      <button class="btn-primary">Request Demo</button>
+      <button class="btn-sec">View API →</button>
+    </div>
+  </div>
+
+  <div class="right">
+    <div class="divider"></div>
+    <div class="metrics">
+      <div class="card hot">
+        <div class="card-label">Avg. Savings</div>
+        <div class="card-value a">€48k</div>
+        <div class="card-unit">per site / year</div>
+      </div>
+      <div class="card">
+        <div class="card-label">Scenarios / day</div>
+        <div class="card-value c">48</div>
+        <div class="card-unit">block-bootstrap fan</div>
+      </div>
+      <div class="card">
+        <div class="card-label">Forecast MAE</div>
+        <div class="card-value g">10.2</div>
+        <div class="card-unit">€/MWh  ·  H = 24h</div>
+      </div>
+      <div class="card">
+        <div class="card-label">Guardrails passed</div>
+        <div class="card-value">8/8</div>
+        <div class="card-unit">neg-price mechanism</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="status-bar">
+  <div class="status-dot"></div>
+  <span>LIVE · DE EPEX SPOT</span>
+  <span style="margin-left:auto">Pipeline v1.0 · XGBoost + Block Bootstrap</span>
+</div>
+
+</body>
+</html>

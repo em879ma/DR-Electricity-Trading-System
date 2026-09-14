@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Style C — Nordic Signal</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --bg: #f5f4f0;
+  --surface: #ffffff;
+  --navy: #0b1524;
+  --blue: #1d4ed8;
+  --blue-light: #3b82f6;
+  --green: #059669;
+  --text: #0b1524;
+  --muted: #6b7280;
+  --border: rgba(11,21,36,0.1);
+}
+html, body {
+  width: 100%; min-height: 100vh;
+  background: var(--bg); color: var(--text);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+/* subtle noise texture */
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+  opacity: 0.4; pointer-events: none; z-index: 0;
+}
+
+nav {
+  position: fixed; top: 0; left: 0; right: 0;
+  padding: 24px 80px;
+  display: flex; align-items: center; justify-content: space-between;
+  z-index: 100;
+  background: rgba(245,244,240,0.92);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  opacity: 0; animation: up 0.4s ease forwards 0.1s;
+}
+.logo { font-size: 18px; font-weight: 800; letter-spacing: -0.5px; color: var(--navy); }
+.logo span { color: var(--blue); }
+.nav-links { display: flex; gap: 36px; align-items: center; list-style: none; }
+.nav-links a { font-size: 13px; font-weight: 500; color: var(--muted); text-decoration: none; transition: color 0.2s; }
+.nav-links a:hover { color: var(--text); }
+.nav-cta {
+  background: var(--navy); color: #fff;
+  padding: 10px 24px; border: none; cursor: pointer;
+  font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 600; font-size: 13px;
+  transition: background 0.2s;
+}
+.nav-cta:hover { background: var(--blue); }
+
+/* HERO */
+.hero {
+  position: relative; z-index: 1;
+  min-height: 100vh;
+  display: flex; flex-direction: column; justify-content: center;
+  padding: 120px 80px 80px;
+  max-width: 1280px; margin: 0 auto;
+}
+
+/* top accent bar */
+.accent-bar {
+  width: 48px; height: 4px; background: var(--blue);
+  margin-bottom: 32px;
+  opacity: 0; animation: widen 0.6s ease forwards 0.3s;
+  transform-origin: left;
+}
+@keyframes widen { from { opacity: 0; transform: scaleX(0); } to { opacity: 1; transform: scaleX(1); } }
+
+.eyebrow {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase;
+  color: var(--blue); margin-bottom: 28px;
+  opacity: 0; animation: up 0.5s ease forwards 0.4s;
+}
+
+h1 {
+  font-size: clamp(52px, 6vw, 86px);
+  font-weight: 800; line-height: 1.02; letter-spacing: -3px;
+  color: var(--navy); margin-bottom: 32px; max-width: 780px;
+  opacity: 0; animation: up 0.7s ease forwards 0.5s;
+}
+h1 .u {
+  position: relative;
+  background: linear-gradient(135deg, var(--blue), var(--blue-light));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+h1 .u::after {
+  content: '';
+  position: absolute; left: 0; bottom: 2px; right: 0; height: 3px;
+  background: var(--blue-light); opacity: 0.3;
+}
+
+.desc {
+  font-size: 18px; line-height: 1.75; color: var(--muted);
+  max-width: 600px; margin-bottom: 52px;
+  opacity: 0; animation: up 0.7s ease forwards 0.65s;
+}
+
+.actions {
+  display: flex; gap: 14px; align-items: center;
+  margin-bottom: 80px;
+  opacity: 0; animation: up 0.6s ease forwards 0.8s;
+}
+.btn-primary {
+  background: var(--navy); color: #fff;
+  padding: 16px 40px; border: none; cursor: pointer;
+  font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700; font-size: 15px;
+  transition: background 0.2s, transform 0.2s;
+}
+.btn-primary:hover { background: var(--blue); transform: translateY(-2px); }
+.btn-outline {
+  background: transparent; color: var(--navy);
+  padding: 16px 32px; border: 1.5px solid var(--navy); cursor: pointer;
+  font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 600; font-size: 15px;
+  transition: all 0.2s;
+}
+.btn-outline:hover { background: var(--navy); color: #fff; }
+
+/* social proof strip */
+.proof {
+  display: flex; align-items: center; gap: 12px;
+  opacity: 0; animation: up 0.5s ease forwards 0.9s;
+}
+.proof-text { font-size: 13px; font-weight: 500; color: var(--muted); }
+.badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--surface); border: 1px solid var(--border);
+  padding: 5px 12px; font-size: 12px; font-weight: 600;
+}
+.badge-dot { width: 6px; height: 6px; border-radius: 50%; }
+.badge-dot.g { background: var(--green); }
+.badge-dot.b { background: var(--blue-light); }
+
+/* ── stats bar ── */
+.stats-bar {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  z-index: 100;
+  opacity: 0; animation: up 0.5s ease forwards 1.0s;
+}
+.stat {
+  padding: 24px 40px;
+  border-right: 1px solid var(--border);
+}
+.stat:last-child { border-right: none; }
+.stat-n {
+  font-size: 32px; font-weight: 800; letter-spacing: -1.5px;
+  color: var(--navy);
+}
+.stat-n.blue { color: var(--blue); }
+.stat-n.green { color: var(--green); }
+.stat-l {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--muted); margin-top: 4px;
+}
+
+@keyframes up { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: none; } }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">DR<span>Compass</span></div>
+  <ul class="nav-links">
+    <li><a href="#">Product</a></li>
+    <li><a href="#">Results</a></li>
+    <li><a href="#">API</a></li>
+    <li><a href="#">Pricing</a></li>
+  </ul>
+  <button class="nav-cta">Get Early Access</button>
+</nav>
+
+<section class="hero">
+  <div class="accent-bar"></div>
+  <div class="eyebrow">Day-Ahead Demand Response · EPEX SPOT</div>
+  <h1>Stop leaving<br><span class="u">€48,000</span><br>on the table.</h1>
+  <p class="desc">DR Compass delivers your factory's optimal load-shifting schedule every morning — backed by probabilistic price forecasting, 48-scenario planning, and verified negative-price guardrails.</p>
+  <div class="actions">
+    <button class="btn-primary">Book a Demo</button>
+    <button class="btn-outline">See the Pipeline →</button>
+  </div>
+  <div class="proof">
+    <span class="proof-text">Pipeline status:</span>
+    <div class="badge"><div class="badge-dot g"></div>XGBoost live</div>
+    <div class="badge"><div class="badge-dot b"></div>48 scenarios ready</div>
+    <div class="badge"><div class="badge-dot g"></div>All guardrails passed</div>
+  </div>
+</section>
+
+<div class="stats-bar">
+  <div class="stat">
+    <div class="stat-n blue">10.2</div>
+    <div class="stat-l">MAE €/MWh · H=24h</div>
+  </div>
+  <div class="stat">
+    <div class="stat-n">72.7%</div>
+    <div class="stat-l">P10–P90 coverage</div>
+  </div>
+  <div class="stat">
+    <div class="stat-n green">€48k</div>
+    <div class="stat-l">Avg. annual savings</div>
+  </div>
+  <div class="stat">
+    <div class="stat-n">8 / 8</div>
+    <div class="stat-l">Mechanism checks ✓</div>
+  </div>
+</div>
+
+</body>
+</html>

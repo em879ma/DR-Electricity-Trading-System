@@ -1,0 +1,1428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DR Compass — Project Presentation</title>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* =====================================================
+   CSS VARIABLES — STYLE B "COMMAND BOLD"
+   ===================================================== */
+:root {
+  --bg:      #111111;
+  --card:    #1a1a1a;
+  --card2:   #202020;
+  --orange:  #E85D04;
+  --orange2: #FF6B1A;
+  --text:    #ffffff;
+  --muted:   #888888;
+  --muted2:  #555555;
+  --border:  rgba(255,255,255,0.08);
+  --green:   #22c55e;
+  --red:     #ef4444;
+  --blue:    #3b82f6;
+  --font-h:  'Archivo Black', sans-serif;
+  --font-b:  'Space Grotesk', sans-serif;
+  --ease:    cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* =====================================================
+   RESET
+   ===================================================== */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+/* =====================================================
+   VIEWPORT-BASE.CSS — MANDATORY FIXED STAGE
+   ===================================================== */
+html, body {
+  width: 100%; height: 100%;
+  overflow: hidden;
+  background: #000;
+}
+.deck-viewport {
+  position: fixed; inset: 0;
+  overflow: hidden;
+  background: #000;
+}
+.deck-stage {
+  position: absolute; left: 0; top: 0;
+  width: 1920px; height: 1080px;
+  overflow: hidden;
+  transform-origin: 0 0;
+  background: var(--bg);
+}
+.slide {
+  position: absolute; inset: 0;
+  width: 1920px; height: 1080px;
+  overflow: hidden;
+  display: block;
+  visibility: hidden; opacity: 0; pointer-events: none;
+  background: var(--bg);
+}
+.slide.active, .slide.visible {
+  visibility: visible; opacity: 1; pointer-events: auto; z-index: 1;
+}
+img, video, canvas, svg { max-width: 100%; max-height: 100%; }
+@media print {
+  html, body { width: 1920px; height: auto; overflow: visible; }
+  .deck-viewport { position: static; }
+  .deck-stage { position: static; width: auto; height: auto; transform: none !important; }
+  .slide { position: relative; display: block !important; visibility: visible !important; opacity: 1 !important; width: 1920px; height: 1080px; break-after: page; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.2s !important; }
+}
+
+/* =====================================================
+   ANIMATION SYSTEM
+   ===================================================== */
+.reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.55s var(--ease), transform 0.55s var(--ease);
+}
+.slide.visible .reveal { opacity: 1; transform: translateY(0); }
+.slide.visible .reveal:nth-child(1) { transition-delay: 0.05s; }
+.slide.visible .reveal:nth-child(2) { transition-delay: 0.16s; }
+.slide.visible .reveal:nth-child(3) { transition-delay: 0.27s; }
+.slide.visible .reveal:nth-child(4) { transition-delay: 0.38s; }
+.slide.visible .reveal:nth-child(5) { transition-delay: 0.49s; }
+.slide.visible .reveal:nth-child(6) { transition-delay: 0.58s; }
+.reveal-left { opacity: 0; transform: translateX(-32px); transition: opacity 0.55s var(--ease), transform 0.55s var(--ease); }
+.reveal-right { opacity: 0; transform: translateX(32px); transition: opacity 0.55s var(--ease), transform 0.55s var(--ease); }
+.slide.visible .reveal-left,
+.slide.visible .reveal-right { opacity: 1; transform: none; }
+.reveal-scale { opacity: 0; transform: scale(0.92); transition: opacity 0.5s var(--ease), transform 0.5s var(--ease); }
+.slide.visible .reveal-scale { opacity: 1; transform: scale(1); }
+
+/* =====================================================
+   SHARED SLIDE COMPONENTS
+   ===================================================== */
+
+/* Section watermark number */
+.wm {
+  position: absolute; font-family: var(--font-h);
+  font-size: 320px; line-height: 1; color: rgba(255,255,255,0.03);
+  user-select: none; pointer-events: none;
+  top: -40px; left: 60px; letter-spacing: -10px;
+}
+
+/* Slide header area */
+.slide-eyebrow {
+  font-family: var(--font-b); font-size: 18px; font-weight: 500;
+  letter-spacing: 0.15em; text-transform: uppercase;
+  color: var(--orange); margin-bottom: 28px;
+}
+.slide-title {
+  font-family: var(--font-h); font-size: 80px;
+  line-height: 1.0; letter-spacing: -3px; color: var(--text);
+  margin-bottom: 32px;
+}
+.slide-title.lg { font-size: 96px; }
+.slide-title.sm { font-size: 60px; }
+.slide-body { font-family: var(--font-b); font-size: 28px; font-weight: 400; line-height: 1.65; color: var(--muted); }
+.slide-body.sm { font-size: 24px; }
+
+/* Orange right panel */
+.orange-panel {
+  position: absolute; right: 0; top: 0; bottom: 0; width: 720px;
+  background: var(--orange); overflow: hidden;
+}
+.orange-panel::before {
+  content: ''; position: absolute; top: -100px; right: -100px;
+  width: 400px; height: 400px; border-radius: 50%;
+  border: 70px solid rgba(0,0,0,0.1);
+}
+.orange-panel::after {
+  content: ''; position: absolute; bottom: 80px; left: -80px;
+  width: 260px; height: 260px; border-radius: 50%;
+  border: 50px solid rgba(0,0,0,0.07);
+}
+
+/* Stat row (used in orange panel) */
+.stat-row {
+  display: grid; gap: 1px;
+  background: rgba(0,0,0,0.2);
+  border-top: 1px solid rgba(0,0,0,0.2);
+}
+.stat-cell { background: rgba(0,0,0,0.1); padding: 24px 28px; }
+.stat-n { font-family: var(--font-h); font-size: 36px; letter-spacing: -1.5px; color: #111; }
+.stat-l { font-family: var(--font-b); font-size: 13px; font-weight: 500; color: rgba(0,0,0,0.55); margin-top: 4px; }
+
+/* Metric card */
+.metric-card {
+  background: var(--card); border: 1px solid var(--border);
+  padding: 36px; position: relative;
+}
+.metric-card.hot { border-color: rgba(232,93,4,0.3); }
+.metric-card.ok  { border-color: rgba(34,197,94,0.25); }
+.mc-label { font-family: var(--font-b); font-size: 16px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 16px; }
+.mc-value { font-family: var(--font-h); font-size: 72px; letter-spacing: -3px; line-height: 1; color: var(--text); }
+.mc-value.or  { color: var(--orange); }
+.mc-value.gr  { color: var(--green); }
+.mc-value.bl  { color: var(--blue); }
+.mc-sub { font-family: var(--font-b); font-size: 18px; color: var(--muted); margin-top: 10px; }
+
+/* Bullet list */
+.blist { list-style: none; display: flex; flex-direction: column; gap: 18px; }
+.blist li { font-family: var(--font-b); font-size: 26px; line-height: 1.5; color: var(--muted); display: flex; gap: 16px; align-items: flex-start; }
+.blist li::before { content: '—'; color: var(--orange); flex-shrink: 0; }
+.blist li strong { color: var(--text); font-weight: 600; }
+
+/* Tag chip */
+.tag { display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--border); padding: 8px 20px; font-family: var(--font-b); font-size: 15px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+.tag .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--orange); }
+
+/* Comparison table */
+.comp-table { width: 100%; border-collapse: collapse; }
+.comp-table th { font-family: var(--font-b); font-size: 18px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); padding: 20px 28px; border-bottom: 1px solid var(--border); text-align: left; }
+.comp-table td { font-family: var(--font-b); font-size: 26px; padding: 22px 28px; border-bottom: 1px solid rgba(255,255,255,0.04); }
+.comp-table tr.best td { color: var(--orange); }
+.comp-table tr.best td:first-child { color: var(--text); }
+.comp-table td.num { font-family: var(--font-h); font-size: 28px; letter-spacing: -0.5px; }
+
+/* Check item */
+.check-item {
+  display: flex; align-items: flex-start; gap: 20px;
+  padding: 24px 28px; background: var(--card); border: 1px solid var(--border);
+}
+.check-icon { width: 36px; height: 36px; border-radius: 50%; background: rgba(34,197,94,0.15); border: 2px solid var(--green); display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px; }
+.check-icon svg { width: 18px; height: 18px; }
+.check-text { font-family: var(--font-b); font-size: 22px; line-height: 1.4; color: var(--muted); }
+.check-text strong { color: var(--text); font-weight: 600; }
+
+/* Code block */
+.code-block {
+  background: #0d1117; border: 1px solid rgba(255,255,255,0.06);
+  padding: 40px 48px; font-family: 'Courier New', monospace;
+  font-size: 22px; line-height: 1.7; color: #c9d1d9;
+  position: relative;
+}
+.code-block .cb-lang { position: absolute; top: 16px; right: 20px; font-family: var(--font-b); font-size: 13px; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; }
+.tok-m { color: #ff7b72; } /* method */
+.tok-p { color: #79c0ff; } /* path */
+.tok-k { color: #d2a8ff; } /* key */
+.tok-v { color: #a5d6ff; } /* value */
+.tok-s { color: #a8ff80; } /* string */
+.tok-c { color: var(--muted2); } /* comment */
+
+/* Flow arrow step */
+.flow-steps { display: flex; align-items: center; gap: 0; }
+.flow-step {
+  display: flex; flex-direction: column; align-items: center; gap: 20px;
+  background: var(--card); border: 1px solid var(--border);
+  padding: 36px 32px; flex: 1; position: relative;
+}
+.flow-step.active { border-color: rgba(232,93,4,0.4); background: rgba(232,93,4,0.07); }
+.flow-num { font-family: var(--font-h); font-size: 48px; color: var(--orange); letter-spacing: -2px; }
+.flow-name { font-family: var(--font-h); font-size: 30px; color: var(--text); text-align: center; }
+.flow-desc { font-family: var(--font-b); font-size: 20px; color: var(--muted); text-align: center; line-height: 1.4; }
+.flow-arrow { font-size: 36px; color: var(--orange); flex-shrink: 0; padding: 0 4px; }
+
+/* =====================================================
+   NAVIGATION CHROME (outside stage)
+   ===================================================== */
+.nav-dots {
+  position: fixed; right: 20px; top: 50%;
+  transform: translateY(-50%);
+  display: flex; flex-direction: column; gap: 8px;
+  z-index: 1000;
+}
+.nav-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: rgba(255,255,255,0.18);
+  cursor: pointer; transition: background 0.25s, transform 0.25s;
+  border: none; padding: 0;
+}
+.nav-dot:hover { background: rgba(255,255,255,0.45); transform: scale(1.3); }
+.nav-dot.active { background: var(--orange); transform: scale(1.35); }
+
+.slide-counter {
+  position: fixed; bottom: 18px; left: 28px;
+  font-family: var(--font-b); font-size: 13px; font-weight: 500;
+  color: rgba(255,255,255,0.3); letter-spacing: 0.1em;
+  z-index: 1000; pointer-events: none;
+}
+.slide-label {
+  position: fixed; bottom: 18px; right: 48px;
+  font-family: var(--font-b); font-size: 13px; font-weight: 400;
+  color: rgba(255,255,255,0.2); letter-spacing: 0.04em;
+  z-index: 1000; pointer-events: none;
+  max-width: 320px; text-align: right;
+}
+</style>
+</head>
+<body>
+
+<!-- Navigation dots (outside stage) -->
+<div class="nav-dots" id="navDots"></div>
+<div class="slide-counter" id="slideCounter">01 / 22</div>
+<div class="slide-label" id="slideLabel">Title</div>
+
+<div class="deck-viewport">
+<main class="deck-stage" id="deckStage">
+
+<!-- ═══════════════════════════════════════════════════════
+     SLIDE 01 — TITLE
+     ═══════════════════════════════════════════════════════ -->
+<section class="slide active" data-title="Title">
+  <div class="wm">01</div>
+
+  <!-- Left content -->
+  <div style="position:absolute;left:80px;top:0;width:1120px;height:1080px;display:flex;flex-direction:column;justify-content:center;padding:0 80px 0 20px;">
+    <div class="tag reveal" style="margin-bottom:44px;width:fit-content"><span class="dot"></span>Day-Ahead Demand Response Optimization</div>
+    <h1 class="reveal" style="font-family:var(--font-h);font-size:128px;line-height:0.95;letter-spacing:-6px;color:var(--text);margin-bottom:36px;">DR<br><span style="color:var(--orange)">Compass</span></h1>
+    <p class="reveal" style="font-family:var(--font-b);font-size:30px;color:var(--muted);max-width:760px;line-height:1.6;margin-bottom:56px;">
+      XGBoost price forecasting · 48-scenario probabilistic planning · counterfactual DR optimization — validated across 8,760 hours of German EPEX SPOT data.
+    </p>
+    <div class="reveal" style="font-family:var(--font-b);font-size:20px;color:var(--muted2);letter-spacing:0.05em;">
+      OPSD Dataset · DE Market 2018 · Four-Level Evaluation Framework
+    </div>
+  </div>
+
+  <!-- Orange right panel -->
+  <div class="orange-panel reveal-right">
+    <div style="position:absolute;top:0;left:0;right:0;bottom:160px;display:flex;flex-direction:column;justify-content:center;padding:60px 60px 0;">
+      <div style="font-family:var(--font-b);font-size:15px;font-weight:500;letter-spacing:0.15em;text-transform:uppercase;color:rgba(0,0,0,0.45);margin-bottom:24px;">Validated Results</div>
+      <div style="font-family:var(--font-h);font-size:64px;letter-spacing:-3px;color:#111;line-height:1.0;">Every feature<br>earned its place.</div>
+    </div>
+    <div class="stat-row" style="grid-template-columns:1fr 1fr 1fr;position:absolute;bottom:0;left:0;right:0;">
+      <div class="stat-cell"><div class="stat-n">12.18</div><div class="stat-l">MAE €/MWh</div></div>
+      <div class="stat-cell"><div class="stat-n">48</div><div class="stat-l">Scenarios/day</div></div>
+      <div class="stat-cell"><div class="stat-n">8/8</div><div class="stat-l">Checks passed</div></div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     SLIDE 02 — AGENDA
+     ═══════════════════════════════════════════════════════ -->
+<section class="slide" data-title="Agenda">
+  <div class="wm">02</div>
+  <div style="position:absolute;left:100px;top:0;width:640px;height:1080px;display:flex;flex-direction:column;justify-content:center;">
+    <div class="slide-eyebrow reveal">Overview</div>
+    <h2 class="slide-title reveal">What We'll<br>Cover</h2>
+    <p class="slide-body reveal">A complete walk-through from raw market data to actionable DR decisions — with full experimental validation.</p>
+  </div>
+  <div style="position:absolute;right:80px;top:0;width:980px;height:1080px;display:flex;flex-direction:column;justify-content:center;gap:0;">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:2px;">
+      <!-- col 1 -->
+      <div>
+        <div class="reveal" style="padding:28px 36px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:20px;">
+          <span style="font-family:var(--font-h);font-size:36px;color:var(--orange)">01</span>
+          <span style="font-family:var(--font-b);font-size:22px;color:var(--text);font-weight:500;">Problem &amp; Dataset</span>
+        </div>
+        <div class="reveal" style="padding:28px 36px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:20px;">
+          <span style="font-family:var(--font-h);font-size:36px;color:var(--orange)">02</span>
+          <span style="font-family:var(--font-b);font-size:22px;color:var(--text);font-weight:500;">Pipeline Architecture</span>
+        </div>
+        <div class="reveal" style="padding:28px 36px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:20px;">
+          <span style="font-family:var(--font-h);font-size:36px;color:var(--orange)">03</span>
+          <span style="font-family:var(--font-b);font-size:22px;color:var(--text);font-weight:500;">Feature Engineering</span>
+        </div>
+        <div class="reveal" style="padding:28px 36px;display:flex;align-items:center;gap:20px;">
+          <span style="font-family:var(--font-h);font-size:36px;color:var(--orange)">04</span>
+          <span style="font-family:var(--font-b);font-size:22px;color:var(--text);font-weight:500;">XGBoost &amp; Benchmark</span>
+        </div>
+      </div>
+      <!-- col 2 -->
+      <div style="border-left:1px solid var(--border);">
+        <div class="reveal" style="padding:28px 36px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:20px;">
+          <span style="font-family:var(--font-h);font-size:36px;color:var(--orange)">05</span>
+          <span style="font-family:var(--font-b);font-size:22px;color:var(--text);font-weight:500;">Scenarios &amp; Quality</span>
+        </div>
+        <div class="reveal" style="padding:28px 36px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:20px;">
+          <span style="font-family:var(--font-h);font-size:36px;color:var(--orange)">06</span>
+          <span style="font-family:var(--font-b);font-size:22px;color:var(--text);font-weight:500;">DR Optimization</span>
+        </div>
+        <div class="reveal" style="padding:28px 36px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:20px;">
+          <span style="font-family:var(--font-h);font-size:36px;color:var(--orange)">07</span>
+          <span style="font-family:var(--font-b);font-size:22px;color:var(--text);font-weight:500;">Ablation Studies</span>
+        </div>
+        <div class="reveal" style="padding:28px 36px;display:flex;align-items:center;gap:20px;">
+          <span style="font-family:var(--font-h);font-size:36px;color:var(--orange)">08</span>
+          <span style="font-family:var(--font-b);font-size:22px;color:var(--text);font-weight:500;">API &amp; Architecture</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     SLIDE 03 — THE PROBLEM
+     ═══════════════════════════════════════════════════════ -->
+<section class="slide" data-title="The Problem">
+  <div class="wm">03</div>
+  <div style="position:absolute;left:100px;top:0;width:800px;height:1080px;display:flex;flex-direction:column;justify-content:center;padding-right:60px;">
+    <div class="slide-eyebrow reveal">Motivation</div>
+    <h2 class="slide-title reveal">Electricity prices<br>are <span style="color:var(--orange)">volatile.</span><br>Most factories ignore it.</h2>
+    <ul class="blist" style="margin-top:16px;">
+      <li class="reveal"><span>German EPEX SPOT prices range from <strong>−€500 to +€800/MWh</strong> within a single day</span></li>
+      <li class="reveal"><span>Industrial consumers with flexible load can <strong>shift demand</strong> to low-price windows — but need forecasts to act</span></li>
+      <li class="reveal"><span>Without probabilistic planning, a single wrong DR decision <strong>costs more than doing nothing</strong></span></li>
+    </ul>
+  </div>
+  <!-- Price bar chart (CSS) -->
+  <div style="position:absolute;right:80px;top:140px;width:880px;height:800px;background:var(--card);border:1px solid var(--border);padding:48px;">
+    <div class="reveal" style="font-family:var(--font-b);font-size:16px;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:32px;">Hourly Price Profile — Typical Day (€/MWh)</div>
+    <div style="display:flex;align-items:flex-end;gap:14px;height:580px;padding-bottom:40px;border-bottom:1px solid var(--border);">
+      <!-- 24 bars with varying heights representing a typical price day -->
+      <div class="reveal" style="flex:1;background:rgba(59,130,246,0.6);height:38%;"></div>
+      <div class="reveal" style="flex:1;background:rgba(59,130,246,0.6);height:28%;"></div>
+      <div class="reveal" style="flex:1;background:rgba(59,130,246,0.6);height:18%;"></div>
+      <div class="reveal" style="flex:1;background:rgba(59,130,246,0.6);height:12%;"></div>
+      <div class="reveal" style="flex:1;background:rgba(232,93,4,0.5);height:8%;"></div>
+      <div class="reveal" style="flex:1;background:rgba(232,93,4,0.5);height:6%;"></div>
+      <div class="reveal" style="flex:1;background:rgba(59,130,246,0.6);height:22%;"></div>
+      <div class="reveal" style="flex:1;background:rgba(59,130,246,0.6);height:35%;"></div>
+      <div class="reveal" style="flex:1;background:var(--orange);height:58%;"></div>
+      <div class="reveal" style="flex:1;background:var(--orange);height:72%;"></div>
+      <div class="reveal" style="flex:1;background:var(--orange);height:68%;"></div>
+      <div class="reveal" style="flex:1;background:var(--orange);height:80%;"></div>
+      <div class="reveal" style="flex:1;background:var(--orange);height:90%;"></div>
+      <div class="reveal" style="flex:1;background:var(--orange);height:88%;"></div>
+      <div class="reveal" style="flex:1;background:var(--orange);height:75%;"></div>
+      <div class="reveal" style="flex:1;background:var(--orange);height:82%;"></div>
+      <div class="reveal" style="flex:1;background:var(--orange);height:95%;"></div>
+      <div class="reveal" style="flex:1;background:var(--orange);height:100%;"></div>
+      <div class="reveal" style="flex:1;background:var(--orange);height:85%;"></div>
+      <div class="reveal" style="flex:1;background:var(--orange);height:70%;"></div>
+      <div class="reveal" style="flex:1;background:rgba(59,130,246,0.6);height:48%;"></div>
+      <div class="reveal" style="flex:1;background:rgba(59,130,246,0.6);height:42%;"></div>
+      <div class="reveal" style="flex:1;background:rgba(59,130,246,0.6);height:40%;"></div>
+      <div class="reveal" style="flex:1;background:rgba(59,130,246,0.6);height:36%;"></div>
+    </div>
+    <div style="display:flex;justify-content:space-between;margin-top:16px;">
+      <span style="font-family:var(--font-b);font-size:16px;color:var(--muted)">00:00</span>
+      <span style="font-family:var(--font-b);font-size:16px;color:var(--orange);font-weight:600">← Peak hours: reduce load here</span>
+      <span style="font-family:var(--font-b);font-size:16px;color:var(--muted)">23:00</span>
+    </div>
+    <div style="display:flex;gap:28px;margin-top:24px;">
+      <span style="display:flex;align-items:center;gap:10px;font-family:var(--font-b);font-size:16px;color:var(--muted)"><span style="width:20px;height:12px;background:var(--orange);display:inline-block;"></span>High-price hours (DR opportunity)</span>
+      <span style="display:flex;align-items:center;gap:10px;font-family:var(--font-b);font-size:16px;color:var(--muted)"><span style="width:20px;height:12px;background:rgba(59,130,246,0.6);display:inline-block;"></span>Off-peak / low-price</span>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     SLIDE 04 — DATASET
+     ═══════════════════════════════════════════════════════ -->
+<section class="slide" data-title="Dataset">
+  <div class="wm">04</div>
+  <div style="position:absolute;left:100px;top:0;width:860px;height:1080px;display:flex;flex-direction:column;justify-content:center;padding-right:60px;">
+    <div class="slide-eyebrow reveal">Data</div>
+    <h2 class="slide-title reveal">OPSD German<br>Market Dataset</h2>
+    <ul class="blist">
+      <li class="reveal"><span><strong>Source:</strong> Open Power System Data (OPSD) — hourly, DE/AT zone</span></li>
+      <li class="reveal"><span><strong>Period:</strong> Full year 2018 — 8,760 hourly observations</span></li>
+      <li class="reveal"><span><strong>Target variables:</strong> price (€/MWh), load (MW), wind generation (MW), solar generation (MW)</span></li>
+      <li class="reveal"><span><strong>Derived features:</strong> 30+ engineered columns including holiday dummies, rolling elasticity, time encodings</span></li>
+    </ul>
+  </div>
+  <div style="position:absolute;right:80px;top:160px;width:820px;display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+    <div class="metric-card reveal">
+      <div class="mc-label">Observations</div>
+      <div class="mc-value bl">8,760</div>
+      <div class="mc-sub">hourly records</div>
+    </div>
+    <div class="metric-card reveal">
+      <div class="mc-label">Target Variables</div>
+      <div class="mc-value">4</div>
+      <div class="mc-sub">price · load · wind · solar</div>
+    </div>
+    <div class="metric-card reveal">
+      <div class="mc-label">Feature Columns</div>
+      <div class="mc-value or">30+</div>
+      <div class="mc-sub">after feature engineering</div>
+    </div>
+    <div class="metric-card reveal">
+      <div class="mc-label">Train / Val / Test</div>
+      <div class="mc-value">70/15/15</div>
+      <div class="mc-sub">chronological split</div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     SLIDE 05 — PIPELINE OVERVIEW
+     ═══════════════════════════════════════════════════════ -->
+<section class="slide" data-title="Pipeline Overview">
+  <div class="wm">05</div>
+  <div style="position:absolute;left:100px;top:100px;">
+    <div class="slide-eyebrow reveal">System Design</div>
+    <h2 class="slide-title reveal">Five-Stage Pipeline</h2>
+  </div>
+  <div style="position:absolute;left:80px;right:80px;bottom:160px;display:flex;align-items:stretch;gap:0;">
+    <div class="flow-step reveal" style="border-right:none;">
+      <div class="flow-num">01</div>
+      <div class="flow-name">Data &amp;<br>Features</div>
+      <div class="flow-desc">OPSD import, 30+ engineered columns, DR baseline demand</div>
+    </div>
+    <div class="flow-arrow reveal">›</div>
+    <div class="flow-step reveal active" style="border-right:none;">
+      <div class="flow-num">02</div>
+      <div class="flow-name">XGBoost<br>Forecast</div>
+      <div class="flow-desc">Price + load + renewable forecasts, calibration, H=24h horizon</div>
+    </div>
+    <div class="flow-arrow reveal">›</div>
+    <div class="flow-step reveal" style="border-right:none;">
+      <div class="flow-num">03</div>
+      <div class="flow-name">48 Bootstrap<br>Scenarios</div>
+      <div class="flow-desc">Block-bootstrap residual sampling, 24h temporal blocks</div>
+    </div>
+    <div class="flow-arrow reveal">›</div>
+    <div class="flow-step reveal" style="border-right:none;">
+      <div class="flow-num">04</div>
+      <div class="flow-name">DR<br>Optimizer</div>
+      <div class="flow-desc">Scenario-grid search, counterfactual price model, neg-price guardrails</div>
+    </div>
+    <div class="flow-arrow reveal">›</div>
+    <div class="flow-step reveal">
+      <div class="flow-num">05</div>
+      <div class="flow-name">Schedule &amp;<br>Evaluation</div>
+      <div class="flow-desc">Hourly DR schedule + 4-level validation (L1–L4)</div>
+    </div>
+  </div>
+  <div class="reveal" style="position:absolute;left:80px;bottom:80px;right:80px;display:flex;gap:32px;">
+    <span style="font-family:var(--font-b);font-size:16px;color:var(--muted)">Scripts: run_01 → run_02 → run_03 → run_04 → run_05/06</span>
+    <span style="font-family:var(--font-b);font-size:16px;color:var(--muted2)">|</span>
+    <span style="font-family:var(--font-b);font-size:16px;color:var(--muted)">Total runtime: ~2 minutes end-to-end</span>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     SLIDE 06 — FEATURE ENGINEERING
+     ═══════════════════════════════════════════════════════ -->
+<section class="slide" data-title="Feature Engineering">
+  <div class="wm">06</div>
+  <div style="position:absolute;left:100px;top:100px;">
+    <div class="slide-eyebrow reveal">Step 1</div>
+    <h2 class="slide-title reveal">Feature Engineering</h2>
+  </div>
+  <div style="position:absolute;left:80px;right:80px;top:320px;bottom:80px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;">
+    <div style="background:var(--card);border:1px solid var(--border);padding:36px;" class="reveal">
+      <div style="font-family:var(--font-h);font-size:22px;color:var(--orange);margin-bottom:20px;">Time Encoding</div>
+      <ul class="blist" style="gap:14px;">
+        <li style="font-size:22px;"><span><strong>hour_sin / hour_cos</strong> — cyclic encoding, avoids 23→0 discontinuity</span></li>
+        <li style="font-size:22px;"><span>day_of_week, month, is_weekend</span></li>
+        <li style="font-size:22px;"><span>24h &amp; 168h lag prices (price memory)</span></li>
+        <li style="font-size:22px;"><span>Ablated: raw integer hour degrades MAE</span></li>
+      </ul>
+    </div>
+    <div style="background:var(--card);border:1px solid var(--border);padding:36px;" class="reveal">
+      <div style="font-family:var(--font-h);font-size:22px;color:var(--orange);margin-bottom:20px;">Calendar &amp; Regime</div>
+      <ul class="blist" style="gap:14px;">
+        <li style="font-size:22px;"><span><strong>is_public_holiday</strong> + lead-24h flag</span></li>
+        <li style="font-size:22px;"><span><strong>is_christmas_week</strong> — Dec 24–Jan 2 low-demand period</span></li>
+        <li style="font-size:22px;"><span><strong>negative_price_dummy_lag_24</strong> — yesterday had negative price</span></li>
+        <li style="font-size:22px;"><span>holiday_load_window (interaction term)</span></li>
+      </ul>
+    </div>
+    <div style="background:var(--card);border:1px solid rgba(232,93,4,0.3);padding:36px;" class="reveal">
+      <div style="font-family:var(--font-h);font-size:22px;color:var(--orange);margin-bottom:20px;">Market Elasticity</div>
+      <ul class="blist" style="gap:14px;">
+        <li style="font-size:22px;"><span><strong>rolling_elasticity</strong> — 168h rolling OLS slope of price on load</span></li>
+        <li style="font-size:22px;"><span>Captures local supply-demand sensitivity</span></li>
+        <li style="font-size:22px;"><span>Renewable lag features: wind_lag_24, solar_lag_24</span></li>
+        <li style="font-size:22px;"><span>Load lags: load_lag_24, load_lag_168</span></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     SLIDE 07 — XGBOOST MODEL
+     ═══════════════════════════════════════════════════════ -->
+<section class="slide" data-title="XGBoost Forecast">
+  <div class="wm">07</div>
+  <div style="position:absolute;left:100px;top:0;width:820px;height:1080px;display:flex;flex-direction:column;justify-content:center;padding-right:60px;">
+    <div class="slide-eyebrow reveal">Step 2 — Forecasting</div>
+    <h2 class="slide-title reveal">XGBoost<br>Price Forecast</h2>
+    <ul class="blist">
+      <li class="reveal"><span><strong>Horizon:</strong> H = 24h (day-ahead market window)</span></li>
+      <li class="reveal"><span><strong>Architecture:</strong> 500 trees, max_depth 6, lr 0.05, early stopping (20 rounds)</span></li>
+      <li class="reveal"><span><strong>Config-driven:</strong> <code style="color:var(--orange)">forecast.model: "xgboost"</code> in config.yaml — swappable to Ridge, LSTM, two-stage RF</span></li>
+      <li class="reveal"><span><strong>Target:</strong> price_t+24 — trained on all 30+ feature columns; negative-price regime captured implicitly</span></li>
+    </ul>
+  </div>
+  <div style="position:absolute;right:80px;top:160px;width:860px;">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;">
+      <div class="metric-card ok reveal">
+        <div class="mc-label">MAE (test set)</div>
+        <div class="mc-value gr">12.18</div>
+        <div class="mc-sub">€/MWh · H=24h</div>
+      </div>
+      <div class="metric-card reveal">
+        <div class="mc-label">RMSE</div>
+        <div class="mc-value">17.43</div>
+        <div class="mc-sub">€/MWh</div>
+      </div>
+      <div class="metric-card reveal">
+        <div class="mc-label">R² (calibrated)</div>
+        <div class="mc-value bl">0.376</div>
+        <div class="mc-sub">explained variance</div>
+      </div>
+      <div class="metric-card hot reveal">
+        <div class="mc-label">vs Naive baseline</div>
+        <div class="mc-value or">−43%</div>
+        <div class="mc-sub">MAE improvement</div>
+      </div>
+    </div>
+    <div class="reveal" style="background:var(--card);border:1px solid var(--border);padding:28px 32px;">
+      <div style="font-family:var(--font-b);font-size:16px;color:var(--muted);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:12px;">Unified Dispatcher — src/forecaster.py</div>
+      <code style="font-size:19px;color:var(--muted);line-height:1.8;">fit_price_forecast(df, model_name=<span style="color:var(--orange)">"xgboost"</span>, split, rf_params, horizon=24)</code>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     SLIDE 08 — FORECAST BENCHMARK
+     ═══════════════════════════════════════════════════════ -->
+<section class="slide" data-title="Forecast Benchmark">
+  <div class="wm">08</div>
+  <div style="position:absolute;left:100px;top:100px;">
+    <div class="slide-eyebrow reveal">Model Comparison</div>
+    <h2 class="slide-title reveal">Four-Model Benchmark</h2>
+  </div>
+  <div style="position:absolute;left:100px;right:100px;top:340px;bottom:80px;display:flex;flex-direction:column;justify-content:flex-start;gap:40px;">
+    <div class="reveal" style="background:var(--card);border:1px solid var(--border);overflow:hidden;">
+      <table class="comp-table" style="width:100%">
+        <thead>
+          <tr>
+            <th style="width:28%;">Model</th>
+            <th>MAE (€/MWh)</th>
+            <th>RMSE (€/MWh)</th>
+            <th>R²</th>
+            <th>MAPE (%)</th>
+            <th>Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="best">
+            <td><strong>XGBoost ✓</strong></td>
+            <td class="num" style="color:var(--orange);">12.18</td>
+            <td class="num">17.43</td>
+            <td class="num">0.376</td>
+            <td class="num">—</td>
+            <td style="font-size:20px;color:var(--orange);">Selected model</td>
+          </tr>
+          <tr>
+            <td>Random Forest</td>
+            <td class="num">14.31</td>
+            <td class="num">20.12</td>
+            <td class="num">0.298</td>
+            <td class="num">—</td>
+            <td style="font-size:20px;color:var(--muted);">Two-stage baseline</td>
+          </tr>
+          <tr>
+            <td>Ridge Regression</td>
+            <td class="num">16.82</td>
+            <td class="num">23.45</td>
+            <td class="num">0.201</td>
+            <td class="num">—</td>
+            <td style="font-size:20px;color:var(--muted);">Linear baseline</td>
+          </tr>
+          <tr style="border-bottom:none;">
+            <td>Naïve (lag-24)</td>
+            <td class="num">21.54</td>
+            <td class="num">29.87</td>
+            <td class="num">−0.08</td>
+            <td class="num">—</td>
+            <td style="font-size:20px;color:var(--muted);">Persistence forecast</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="reveal" style="display:flex;gap:48px;align-items:center;">
+      <div style="font-family:var(--font-b);font-size:22px;color:var(--muted)">XGBoost outperforms RF by <strong style="color:var(--orange)">15%</strong> on MAE, Ridge by <strong style="color:var(--orange)">28%</strong>, Naïve by <strong style="color:var(--orange)">43%</strong></div>
+      <div style="font-family:var(--font-b);font-size:18px;color:var(--muted2);white-space:nowrap;">src/forecast_benchmark.py · scripts/run_07</div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     SLIDE 09 — CALIBRATION
+     ═══════════════════════════════════════════════════════ -->
+<section class="slide" data-title="Forecast Calibration">
+  <div class="wm">09</div>
+  <div style="position:absolute;left:100px;top:100px;">
+    <div class="slide-eyebrow reveal">Step 2b — Post-processing</div>
+    <h2 class="slide-title reveal">Isotonic Calibration</h2>
+  </div>
+  <div style="position:absolute;left:80px;right:80px;top:340px;bottom:80px;display:grid;grid-template-columns:1fr 1fr;gap:4px;">
+    <!-- Before -->
+    <div class="reveal" style="background:var(--card);border:1px solid var(--border);padding:48px;display:flex;flex-direction:column;gap:24px;">
+      <div style="font-family:var(--font-h);font-size:28px;color:var(--muted);">BEFORE Calibration</div>
+      <div style="font-family:var(--font-b);font-size:20px;color:var(--muted2);margin-bottom:8px;">Raw XGBoost point forecasts — no uncertainty quantification</div>
+      <div style="display:flex;flex-direction:column;gap:16px;margin-top:12px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 20px;background:var(--bg);border:1px solid var(--border);">
+          <span style="font-family:var(--font-b);font-size:20px;color:var(--muted)">Prediction type</span>
+          <span style="font-family:var(--font-h);font-size:22px;color:var(--muted)">Point estimate only</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 20px;background:var(--bg);border:1px solid var(--border);">
+          <span style="font-family:var(--font-b);font-size:20px;color:var(--muted)">Uncertainty bounds</span>
+          <span style="font-family:var(--font-h);font-size:22px;color:var(--red)">None</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 20px;background:var(--bg);border:1px solid var(--border);">
+          <span style="font-family:var(--font-b);font-size:20px;color:var(--muted)">R²</span>
+          <span style="font-family:var(--font-h);font-size:22px;color:var(--muted)">0.304</span>
+        </div>
+      </div>
+    </div>
+    <!-- After -->
+    <div class="reveal" style="background:var(--card);border:1px solid rgba(34,197,94,0.3);padding:48px;display:flex;flex-direction:column;gap:24px;">
+      <div style="font-family:var(--font-h);font-size:28px;color:var(--green);">AFTER Calibration</div>
+      <div style="font-family:var(--font-b);font-size:20px;color:var(--muted2);margin-bottom:8px;">Isotonic regression maps raw scores to calibrated quantiles</div>
+      <div style="display:flex;flex-direction:column;gap:16px;margin-top:12px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 20px;background:var(--bg);border:1px solid var(--border);">
+          <span style="font-family:var(--font-b);font-size:20px;color:var(--muted)">Prediction type</span>
+          <span style="font-family:var(--font-h);font-size:22px;color:var(--green)">P10 / P50 / P90 quantiles</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 20px;background:var(--bg);border:1px solid var(--border);">
+          <span style="font-family:var(--font-b);font-size:20px;color:var(--muted)">Coverage (P10–P90)</span>
+          <span style="font-family:var(--font-h);font-size:22px;color:var(--green)">72.7%</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 20px;background:var(--bg);border:1px solid var(--border);">
+          <span style="font-family:var(--font-b);font-size:20px;color:var(--muted)">R² (calibrated)</span>
+          <span style="font-family:var(--font-h);font-size:22px;color:var(--green)">0.376</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     SLIDE 10 — BOOTSTRAP SCENARIOS
+     ═══════════════════════════════════════════════════════ -->
+<section class="slide" data-title="Bootstrap Scenarios">
+  <div class="wm">10</div>
+  <div style="position:absolute;left:100px;top:0;width:820px;height:1080px;display:flex;flex-direction:column;justify-content:center;padding-right:60px;">
+    <div class="slide-eyebrow reveal">Step 3 — Uncertainty</div>
+    <h2 class="slide-title reveal">Block Bootstrap<br>Scenario Fan</h2>
+    <ul class="blist">
+      <li class="reveal"><span><strong>48 scenarios per day</strong> — each a complete 24-hour price/load/renewable path</span></li>
+      <li class="reveal"><span><strong>Block length = 24h</strong> — residuals sampled as full-day blocks, preserving intra-day autocorrelation</span></li>
+      <li class="reveal"><span><strong>Residual history</strong> from calibrated forecast errors on the training set</span></li>
+      <li class="reveal"><span><strong>Why not IID?</strong> Ablation shows block bootstrap gives 72.7% vs IID 69.4% P10–P90 coverage</span></li>
+    </ul>
+  </div>
+  <!-- Scenario fan visualization -->
+  <div style="position:absolute;right:80px;top:120px;width:880px;height:840px;background:var(--card);border:1px solid var(--border);padding:48px;overflow:hidden;">
+    <div class="reveal" style="font-family:var(--font-b);font-size:16px;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);margin-bottom:32px;">48-Scenario Price Fan (Schematic)</div>
+    <div style="position:relative;height:600px;border-bottom:1px solid var(--border);border-left:1px solid var(--border);">
+      <!-- P10-P90 band -->
+      <div class="reveal-scale" style="position:absolute;bottom:10%;left:5%;right:5%;height:60%;background:rgba(232,93,4,0.08);border-top:1px dashed rgba(232,93,4,0.3);border-bottom:1px dashed rgba(232,93,4,0.3);"></div>
+      <!-- P50 median line -->
+      <svg style="position:absolute;inset:0;width:100%;height:100%;" viewBox="0 0 100 100" preserveAspectRatio="none">
+        <!-- individual scenario lines -->
+        <polyline points="0,50 10,48 20,38 30,30 40,25 50,20 60,22 70,28 80,35 90,40 100,38" fill="none" stroke="rgba(232,93,4,0.15)" stroke-width="0.5"/>
+        <polyline points="0,52 10,55 20,45 30,35 40,28 50,22 60,18 70,24 80,30 90,36 100,34" fill="none" stroke="rgba(232,93,4,0.15)" stroke-width="0.5"/>
+        <polyline points="0,48 10,42 20,35 30,28 40,23 50,18 60,20 70,26 80,32 90,38 100,42" fill="none" stroke="rgba(232,93,4,0.15)" stroke-width="0.5"/>
+        <polyline points="0,54 10,58 20,50 30,38 40,30 50,24 60,26 70,30 80,38 90,42 100,44" fill="none" stroke="rgba(232,93,4,0.15)" stroke-width="0.5"/>
+        <polyline points="0,46 10,44 20,36 30,26 40,20 50,16 60,18 70,22 80,28 90,34 100,36" fill="none" stroke="rgba(232,93,4,0.15)" stroke-width="0.5"/>
+        <!-- P50 median -->
+        <polyline points="0,50 10,46 20,38 30,29 40,23 50,19 60,21 70,26 80,32 90,38 100,40" fill="none" stroke="rgba(232,93,4,0.9)" stroke-width="1.5"/>
+        <!-- Actual (hypothetical) -->
+        <polyline points="0,51 10,47 20,40 30,31 40,27 50,21 60,23 70,29 80,34 90,37 100,39" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="1" stroke-dasharray="3,2"/>
+      </svg>
+    </div>
+    <div style="display:flex;gap:32px;margin-top:20px;">
+      <span style="display:flex;align-items:center;gap:10px;font-family:var(--font-b);font-size:16px;color:var(--muted)"><span style="width:28px;height:3px;background:var(--orange);display:inline-block;"></span>P50 (median scenario)</span>
+      <span style="display:flex;align-items:center;gap:10px;font-family:var(--font-b);font-size:16px;color:var(--muted)"><span style="width:28px;height:12px;background:rgba(232,93,4,0.15);border:1px dashed rgba(232,93,4,0.4);display:inline-block;"></span>P10–P90 band</span>
+      <span style="display:flex;align-items:center;gap:10px;font-family:var(--font-b);font-size:16px;color:var(--muted)"><span style="width:28px;height:2px;background:rgba(255,255,255,0.5);display:inline-block;border-top:2px dashed rgba(255,255,255,0.5);"></span>Actual price</span>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     SLIDE 11 — SCENARIO QUALITY (L2)
+     ═══════════════════════════════════════════════════════ -->
+<section class="slide" data-title="Scenario Quality (L2)">
+  <div class="wm">11</div>
+  <div style="position:absolute;left:100px;top:100px;">
+    <div class="slide-eyebrow reveal">Level 2 Evaluation</div>
+    <h2 class="slide-title reveal">Scenario Quality</h2>
+  </div>
+  <div style="position:absolute;left:80px;right:80px;top:340px;bottom:80px;display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:20px;">
+    <div class="metric-card ok reveal">
+      <div class="mc-label">P10–P90 Coverage</div>
+      <div class="mc-value gr">72.7%</div>
+      <div class="mc-sub">actuals within interval</div>
+    </div>
+    <div class="metric-card ok reveal">
+      <div class="mc-label">P05–P95 Coverage</div>
+      <div class="mc-value gr">84.5%</div>
+      <div class="mc-sub">wider band coverage</div>
+    </div>
+    <div class="metric-card reveal">
+      <div class="mc-label">Mean Interval Width</div>
+      <div class="mc-value">30.8</div>
+      <div class="mc-sub">€/MWh (P10–P90)</div>
+    </div>
+    <div class="metric-card reveal">
+      <div class="mc-label">Scenario Bias</div>
+      <div class="mc-value bl">3.35</div>
+      <div class="mc-sub">€/MWh (median − actual)</div>
+    </div>
+  </div>
+  <div class="reveal" style="position:absolute;left:80px;right:80px;bottom:80px;padding:20px 32px;background:var(--card);border-left:3px solid var(--orange);font-family:var(--font-b);font-size:20px;color:var(--muted);line-height:1.5;">
+    High-price tail (≥P90 actual): <strong style="color:var(--text)">53% coverage</strong> within P10–P90 band — scenarios successfully capture the extreme upside risk that drives DR decisions.
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     SLIDE 12 — DR OPTIMIZATION
+     ═══════════════════════════════════════════════════════ -->
+<section class="slide" data-title="DR Optimization">
+  <div class="wm">12</div>
+  <div style="position:absolute;left:100px;top:0;width:820px;height:1080px;display:flex;flex-direction:column;justify-content:center;padding-right:60px;">
+    <div class="slide-eyebrow reveal">Step 4 — Decision</div>
+    <h2 class="slide-title reveal">DR Optimization<br>Algorithm</h2>
+    <ul class="blist">
+      <li class="reveal"><span><strong>Objective:</strong> minimize average cost across all 48 scenarios weighted by scenario probability</span></li>
+      <li class="reveal"><span><strong>Counterfactual price model:</strong> Ridge + RF structural model predicts post-DR price from demand change</span></li>
+      <li class="reveal"><span><strong>Flexibility constraint:</strong> 10% of baseline demand, min_load_ratio = 70%</span></li>
+      <li class="reveal"><span><strong>Negative-price guardrail:</strong> suppresses DR when P(price &lt; threshold) ≥ 30% — prevents reducing load into price spikes</span></li>
+    </ul>
+  </div>
+  <div style="position:absolute;right:80px;top:120px;width:860px;">
+    <div style="display:flex;flex-direction:column;gap:3px;">
+      <div class="reveal" style="display:flex;align-items:center;gap:0;">
+        <div style="background:var(--card);border:1px solid var(--border);padding:28px 32px;flex:1;">
+          <div style="font-family:var(--font-h);font-size:22px;color:var(--orange);margin-bottom:8px;">① Scenario Grid</div>
+          <div style="font-family:var(--font-b);font-size:19px;color:var(--muted);">48 price scenarios × 24 hours × flexibility steps</div>
+        </div>
+      </div>
+      <div style="text-align:center;font-size:24px;color:var(--orange);padding:4px;">↓</div>
+      <div class="reveal" style="display:flex;align-items:center;gap:0;">
+        <div style="background:var(--card);border:1px solid var(--border);padding:28px 32px;flex:1;">
+          <div style="font-family:var(--font-h);font-size:22px;color:var(--orange);margin-bottom:8px;">② Guardrail Check</div>
+          <div style="font-family:var(--font-b);font-size:19px;color:var(--muted);">If P(price &lt; low_threshold) ≥ 0.30 → block DR for that hour</div>
+        </div>
+      </div>
+      <div style="text-align:center;font-size:24px;color:var(--orange);padding:4px;">↓</div>
+      <div class="reveal" style="display:flex;align-items:center;gap:0;">
+        <div style="background:var(--card);border:1px solid var(--border);padding:28px 32px;flex:1;">
+          <div style="font-family:var(--font-h);font-size:22px;color:var(--orange);margin-bottom:8px;">③ Counterfactual Price</div>
+          <div style="font-family:var(--font-b);font-size:19px;color:var(--muted);">Ridge+RF model: price_cf = f(demand_base − q_DR, renewables, time)</div>
+        </div>
+      </div>
+      <div style="text-align:center;font-size:24px;color:var(--orange);padding:4px;">↓</div>
+      <div class="reveal" style="display:flex;align-items:center;gap:0;">
+        <div style="background:rgba(232,93,4,0.08);border:1px solid rgba(232,93,4,0.35);padding:28px 32px;flex:1;">
+          <div style="font-family:var(--font-h);font-size:22px;color:var(--orange);margin-bottom:8px;">④ Optimal Schedule</div>
+          <div style="font-family:var(--font-b);font-size:19px;color:var(--muted);">q_DA_optimal per hour → day_ahead_optimal_dr_schedule.csv</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     SLIDE 13 — DECISION RESULTS (L3)
+     ═══════════════════════════════════════════════════════ -->
+<section class="slide" data-title="Decision Results (L3)">
+  <div class="wm">13</div>
+  <div style="position:absolute;left:80px;top:0;width:1120px;height:1080px;display:flex;flex-direction:column;justify-content:center;padding:0 80px 0 20px;">
+    <div class="slide-eyebrow reveal">Level 3 Evaluation</div>
+    <h2 class="slide-title reveal">Decision Performance</h2>
+    <ul class="blist">
+      <li class="reveal"><span><strong>11.6% average price reduction</strong> — $5.68/MWh across all DR-active hours</span></li>
+      <li class="reveal"><span><strong>65 of 66 high-price hours eliminated</strong> — 99% reduction in above-P90 cost exposure</span></li>
+      <li class="reveal"><span><strong>DR utilization at high-price hours:</strong> 99.99% — optimizer fully engages when conditions justify it</span></li>
+      <li class="reveal"><span><strong>0% constraint violations</strong> — flexibility ratio and min-load constraints always satisfied</span></li>
+    </ul>
+  </div>
+  <div class="orange-panel reveal-right">
+    <div style="position:absolute;top:0;left:0;right:0;bottom:220px;display:flex;flex-direction:column;justify-content:center;padding:60px;">
+      <div style="font-family:var(--font-b);font-size:15px;font-weight:500;letter-spacing:0.15em;text-transform:uppercase;color:rgba(0,0,0,0.45);margin-bottom:20px;">Key Result</div>
+      <div style="font-family:var(--font-h);font-size:80px;letter-spacing:-4px;color:#111;line-height:1.0;margin-bottom:24px;">11.6%</div>
+      <div style="font-family:var(--font-h);font-size:32px;color:#111;margin-bottom:12px;">Price Reduction</div>
+      <div style="font-family:var(--font-b);font-size:20px;color:rgba(0,0,0,0.55);">avg. across all market hours</div>
+    </div>
+    <div class="stat-row" style="grid-template-columns:1fr 1fr;position:absolute;bottom:0;left:0;right:0;">
+      <div class="stat-cell"><div class="stat-n">99%</div><div class="stat-l">High-price hrs reduced</div></div>
+      <div class="stat-cell"><div class="stat-n">0%</div><div class="stat-l">Constraint violations</div></div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     SLIDE 14 — MECHANISM CHECK (L4)
+     ═══════════════════════════════════════════════════════ -->
+<section class="slide" data-title="Mechanism Check (L4)">
+  <div class="wm">14</div>
+  <div style="position:absolute;left:100px;top:100px;">
+    <div class="slide-eyebrow reveal">Level 4 Evaluation</div>
+    <h2 class="slide-title reveal">Mechanism Validity — 8/8 Passed</h2>
+  </div>
+  <div style="position:absolute;left:80px;right:80px;top:340px;bottom:80px;display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+    <div class="check-item reveal">
+      <div class="check-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="3"><polyline points="20,6 9,17 4,12"/></svg></div>
+      <div class="check-text"><strong>Price–Demand Elasticity:</strong> Demand reduction leads to counterfactual price decrease — structural sign correct</div>
+    </div>
+    <div class="check-item reveal">
+      <div class="check-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="3"><polyline points="20,6 9,17 4,12"/></svg></div>
+      <div class="check-text"><strong>DR Targeting:</strong> Optimizer selects high-price hours with statistically higher prices than non-DR hours</div>
+    </div>
+    <div class="check-item reveal">
+      <div class="check-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="3"><polyline points="20,6 9,17 4,12"/></svg></div>
+      <div class="check-text"><strong>Guardrail Activation:</strong> Negative-price guard correctly suppresses DR for hours with P(neg) ≥ 0.30</div>
+    </div>
+    <div class="check-item reveal">
+      <div class="check-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="3"><polyline points="20,6 9,17 4,12"/></svg></div>
+      <div class="check-text"><strong>Flexibility Constraint:</strong> DR quantity never exceeds flexibility_ratio × demand_base in any hour</div>
+    </div>
+    <div class="check-item reveal">
+      <div class="check-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="3"><polyline points="20,6 9,17 4,12"/></svg></div>
+      <div class="check-text"><strong>Min-Load Constraint:</strong> Residual demand always ≥ 70% of baseline — load floor enforced</div>
+    </div>
+    <div class="check-item reveal">
+      <div class="check-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="3"><polyline points="20,6 9,17 4,12"/></svg></div>
+      <div class="check-text"><strong>Scenario Uncertainty:</strong> Wider P10–P90 intervals correlate with lower DR utilization — model is risk-aware</div>
+    </div>
+    <div class="check-item reveal">
+      <div class="check-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="3"><polyline points="20,6 9,17 4,12"/></svg></div>
+      <div class="check-text"><strong>Counterfactual Direction:</strong> Post-DR counterfactual price always ≤ observed price when DR applied</div>
+    </div>
+    <div class="check-item reveal">
+      <div class="check-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="3"><polyline points="20,6 9,17 4,12"/></svg></div>
+      <div class="check-text"><strong>No Negative-Price DR:</strong> Zero hours where DR was applied at negative prices (guardrail effective)</div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     SLIDE 15 — ABLATION OVERVIEW
+     ═══════════════════════════════════════════════════════ -->
+<section class="slide" data-title="Ablation Overview">
+  <div class="wm">15</div>
+  <div style="position:absolute;left:100px;top:100px;">
+    <div class="slide-eyebrow reveal">Experimental Validation</div>
+    <h2 class="slide-title reveal">Ablation Studies — 6 Experiments</h2>
+  </div>
+  <div style="position:absolute;left:80px;right:80px;top:330px;bottom:80px;">
+    <div class="reveal" style="background:var(--card);border:1px solid var(--border);overflow:hidden;">
+      <table class="comp-table" style="width:100%">
+        <thead>
+          <tr>
+            <th style="width:22%">Ablation</th>
+            <th style="width:30%">What Changes</th>
+            <th>Key Impact</th>
+            <th>Verdict</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="best">
+            <td><strong>No Scenarios</strong></td>
+            <td style="font-size:20px;color:var(--muted)">Point forecast only (1 scenario)</td>
+            <td style="font-size:20px;color:var(--red)">Cost reduction −27.5%</td>
+            <td style="font-size:20px;color:var(--orange)">Scenarios critical ✗</td>
+          </tr>
+          <tr>
+            <td>IID Bootstrap</td>
+            <td style="font-size:20px;color:var(--muted)">IID residual sampling (no blocks)</td>
+            <td style="font-size:20px;color:var(--muted)">Coverage drops 72.7% → 69.4%</td>
+            <td style="font-size:20px;color:var(--green)">Block bootstrap better ✓</td>
+          </tr>
+          <tr>
+            <td>No Holiday Feats</td>
+            <td style="font-size:20px;color:var(--muted)">Remove 7 holiday/dummy columns</td>
+            <td style="font-size:20px;color:var(--muted)">MAE increases ~8%</td>
+            <td style="font-size:20px;color:var(--green)">Calendar features needed ✓</td>
+          </tr>
+          <tr>
+            <td>No Sin/Cos</td>
+            <td style="font-size:20px;color:var(--muted)">Replace cyclic encoding with raw hour</td>
+            <td style="font-size:20px;color:var(--muted)">MAE increases ~5%</td>
+            <td style="font-size:20px;color:var(--green)">Cyclic encoding better ✓</td>
+          </tr>
+          <tr>
+            <td>No Elasticity</td>
+            <td style="font-size:20px;color:var(--muted)">Remove rolling_elasticity feature</td>
+            <td style="font-size:20px;color:var(--muted)">MAE increases ~3%</td>
+            <td style="font-size:20px;color:var(--green)">Elasticity contributes ✓</td>
+          </tr>
+          <tr style="border-bottom:none;">
+            <td>No Guardrail</td>
+            <td style="font-size:20px;color:var(--muted)">Disable neg-price protection</td>
+            <td style="font-size:20px;color:var(--red)">21 neg-price DR violations</td>
+            <td style="font-size:20px;color:var(--orange)">Guardrail essential ✗</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     SLIDE 16 — ABLATION: NO SCENARIOS
+     ═══════════════════════════════════════════════════════ -->
+<section class="slide" data-title="Ablation: No Scenarios">
+  <div class="wm">16</div>
+  <div style="position:absolute;left:100px;top:100px;">
+    <div class="slide-eyebrow reveal">Ablation 1 — Most Critical</div>
+    <h2 class="slide-title reveal">Removing the Scenario Module</h2>
+  </div>
+  <div style="position:absolute;left:80px;right:80px;top:330px;bottom:80px;display:grid;grid-template-columns:1fr 1fr;gap:4px;">
+    <div class="reveal" style="background:var(--card);border:1px solid var(--border);padding:48px;display:flex;flex-direction:column;gap:20px;">
+      <div style="font-family:var(--font-h);font-size:24px;color:var(--muted)">Variant: Point Forecast Only</div>
+      <div style="font-family:var(--font-b);font-size:20px;color:var(--muted2)">Replace 48-scenario fan with a single degenerate scenario = point forecast</div>
+      <div style="display:flex;flex-direction:column;gap:12px;margin-top:8px;">
+        <div style="display:flex;justify-content:space-between;padding:16px 20px;background:var(--bg);border:1px solid var(--border);">
+          <span style="font-family:var(--font-b);font-size:20px;color:var(--muted)">Risk awareness</span>
+          <span style="font-family:var(--font-h);font-size:20px;color:var(--red)">None</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:16px 20px;background:var(--bg);border:1px solid var(--border);">
+          <span style="font-family:var(--font-b);font-size:20px;color:var(--muted)">Avg. cost reduction</span>
+          <span style="font-family:var(--font-h);font-size:20px;color:var(--red)">−27.5% vs baseline</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:16px 20px;background:var(--bg);border:1px solid var(--border);">
+          <span style="font-family:var(--font-b);font-size:20px;color:var(--muted)">Over-commit risk</span>
+          <span style="font-family:var(--font-h);font-size:20px;color:var(--red)">High (no P10 floor)</span>
+        </div>
+      </div>
+    </div>
+    <div class="reveal" style="background:var(--card);border:1px solid rgba(34,197,94,0.3);padding:48px;display:flex;flex-direction:column;gap:20px;">
+      <div style="font-family:var(--font-h);font-size:24px;color:var(--green)">Baseline: 48 Scenarios</div>
+      <div style="font-family:var(--font-b);font-size:20px;color:var(--muted2)">Block-bootstrap fan captures full distribution of plausible price paths</div>
+      <div style="display:flex;flex-direction:column;gap:12px;margin-top:8px;">
+        <div style="display:flex;justify-content:space-between;padding:16px 20px;background:var(--bg);border:1px solid var(--border);">
+          <span style="font-family:var(--font-b);font-size:20px;color:var(--muted)">Risk awareness</span>
+          <span style="font-family:var(--font-h);font-size:20px;color:var(--green)">P10 / P50 / P90</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:16px 20px;background:var(--bg);border:1px solid var(--border);">
+          <span style="font-family:var(--font-b);font-size:20px;color:var(--muted)">Avg. cost reduction</span>
+          <span style="font-family:var(--font-h);font-size:20px;color:var(--green)">Baseline (100%)</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:16px 20px;background:var(--bg);border:1px solid var(--border);">
+          <span style="font-family:var(--font-b);font-size:20px;color:var(--muted)">Over-commit risk</span>
+          <span style="font-family:var(--font-h);font-size:20px;color:var(--green)">Managed by P10</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     SLIDE 17 — ABLATION: IID vs BLOCK
+     ═══════════════════════════════════════════════════════ -->
+<section class="slide" data-title="Ablation: Bootstrap Method">
+  <div class="wm">17</div>
+  <div style="position:absolute;left:100px;top:100px;">
+    <div class="slide-eyebrow reveal">Ablation 2 — Scenario Method</div>
+    <h2 class="slide-title reveal">IID vs Block Bootstrap</h2>
+  </div>
+  <div style="position:absolute;left:80px;right:80px;top:330px;bottom:80px;display:grid;grid-template-columns:1fr 1fr;gap:4px;align-items:start;">
+    <div class="reveal" style="background:var(--card);border:1px solid var(--border);padding:48px;">
+      <div style="font-family:var(--font-h);font-size:24px;color:var(--muted);margin-bottom:16px;">IID Residual Sampling</div>
+      <div style="font-family:var(--font-b);font-size:19px;color:var(--muted2);line-height:1.5;margin-bottom:28px;">Each hour's residual sampled independently — ignores 24h intra-day autocorrelation of price residuals</div>
+      <div class="metric-card" style="padding:24px;">
+        <div class="mc-label" style="font-size:14px;">P10–P90 Coverage</div>
+        <div class="mc-value" style="font-size:56px;color:var(--muted)">69.4%</div>
+        <div class="mc-sub">lower coverage, over-narrow intervals</div>
+      </div>
+    </div>
+    <div class="reveal" style="background:var(--card);border:1px solid rgba(34,197,94,0.3);padding:48px;">
+      <div style="font-family:var(--font-h);font-size:24px;color:var(--green);margin-bottom:16px;">Block Bootstrap (24h) ✓</div>
+      <div style="font-family:var(--font-b);font-size:19px;color:var(--muted2);line-height:1.5;margin-bottom:28px;">Residuals sampled as complete 24h blocks — preserves morning-peak-evening autocorrelation structure</div>
+      <div class="metric-card ok" style="padding:24px;">
+        <div class="mc-label" style="font-size:14px;">P10–P90 Coverage</div>
+        <div class="mc-value gr" style="font-size:56px;">72.7%</div>
+        <div class="mc-sub">+3.3 pp improvement, properly-calibrated</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     SLIDE 18 — ABLATION: FEATURES
+     ═══════════════════════════════════════════════════════ -->
+<section class="slide" data-title="Ablation: Feature Groups">
+  <div class="wm">18</div>
+  <div style="position:absolute;left:100px;top:100px;">
+    <div class="slide-eyebrow reveal">Ablations 3–5 — Feature Importance</div>
+    <h2 class="slide-title reveal">Every Feature Earned Its Place</h2>
+  </div>
+  <div style="position:absolute;left:80px;right:80px;top:340px;bottom:80px;display:flex;flex-direction:column;gap:20px;">
+    <div class="reveal" style="display:grid;grid-template-columns:240px 1fr 200px 200px;align-items:center;gap:0;background:var(--card);border:1px solid rgba(232,93,4,0.3);">
+      <div style="padding:28px 32px;border-right:1px solid var(--border);">
+        <div style="font-family:var(--font-h);font-size:20px;color:var(--orange)">Holiday &amp; Calendar</div>
+        <div style="font-family:var(--font-b);font-size:16px;color:var(--muted2);margin-top:4px;">7 features removed</div>
+      </div>
+      <div style="padding:28px 32px;font-family:var(--font-b);font-size:19px;color:var(--muted);border-right:1px solid var(--border);">Removes holiday load suppression signal, Christmas week regime, yesterday's negative-price dummy</div>
+      <div style="padding:28px 32px;text-align:center;border-right:1px solid var(--border);">
+        <div style="font-family:var(--font-h);font-size:28px;color:var(--red)">+8%</div>
+        <div style="font-family:var(--font-b);font-size:14px;color:var(--muted)">MAE increase</div>
+      </div>
+      <div style="padding:28px 32px;text-align:center;">
+        <div style="font-family:var(--font-h);font-size:20px;color:var(--orange)">Required</div>
+      </div>
+    </div>
+    <div class="reveal" style="display:grid;grid-template-columns:240px 1fr 200px 200px;align-items:center;gap:0;background:var(--card);border:1px solid var(--border);">
+      <div style="padding:28px 32px;border-right:1px solid var(--border);">
+        <div style="font-family:var(--font-h);font-size:20px;color:var(--orange)">Sin/Cos Encoding</div>
+        <div style="font-family:var(--font-b);font-size:16px;color:var(--muted2);margin-top:4px;">Replaced with raw hour int</div>
+      </div>
+      <div style="padding:28px 32px;font-family:var(--font-b);font-size:19px;color:var(--muted);border-right:1px solid var(--border);">Raw integer hour creates 23→0 discontinuity; cyclic encoding removes this artificial boundary</div>
+      <div style="padding:28px 32px;text-align:center;border-right:1px solid var(--border);">
+        <div style="font-family:var(--font-h);font-size:28px;color:var(--red)">+5%</div>
+        <div style="font-family:var(--font-b);font-size:14px;color:var(--muted)">MAE increase</div>
+      </div>
+      <div style="padding:28px 32px;text-align:center;">
+        <div style="font-family:var(--font-h);font-size:20px;color:var(--orange)">Required</div>
+      </div>
+    </div>
+    <div class="reveal" style="display:grid;grid-template-columns:240px 1fr 200px 200px;align-items:center;gap:0;background:var(--card);border:1px solid var(--border);">
+      <div style="padding:28px 32px;border-right:1px solid var(--border);">
+        <div style="font-family:var(--font-h);font-size:20px;color:var(--orange)">Rolling Elasticity</div>
+        <div style="font-family:var(--font-b);font-size:16px;color:var(--muted2);margin-top:4px;">168h OLS slope removed</div>
+      </div>
+      <div style="padding:28px 32px;font-family:var(--font-b);font-size:19px;color:var(--muted);border-right:1px solid var(--border);">Captures local supply tightness; weeks with high elasticity have amplified price responses to demand changes</div>
+      <div style="padding:28px 32px;text-align:center;border-right:1px solid var(--border);">
+        <div style="font-family:var(--font-h);font-size:28px;color:var(--muted)">+3%</div>
+        <div style="font-family:var(--font-b);font-size:14px;color:var(--muted)">MAE increase</div>
+      </div>
+      <div style="padding:28px 32px;text-align:center;">
+        <div style="font-family:var(--font-h);font-size:20px;color:var(--green)">Helpful</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     SLIDE 19 — ABLATION: NO GUARDRAIL
+     ═══════════════════════════════════════════════════════ -->
+<section class="slide" data-title="Ablation: No Guardrail">
+  <div class="wm">19</div>
+  <div style="position:absolute;left:100px;top:0;width:860px;height:1080px;display:flex;flex-direction:column;justify-content:center;padding-right:60px;">
+    <div class="slide-eyebrow reveal">Ablation 6 — Safety</div>
+    <h2 class="slide-title reveal">Removing the<br>Negative-Price Guardrail</h2>
+    <ul class="blist">
+      <li class="reveal"><span>Without the guardrail, the optimizer sees low expected prices and <strong>reduces load during negative-price windows</strong> — worsening the market position</span></li>
+      <li class="reveal"><span><strong>21 hours</strong> in test set where DR was applied at negative market prices — each one a guaranteed financial loss</span></li>
+      <li class="reveal"><span>The guardrail condition blocks DR when <code style="color:var(--orange)">P(price &lt; threshold) ≥ 0.30</code> — risk-aware, not deterministic</span></li>
+    </ul>
+  </div>
+  <div style="position:absolute;right:80px;top:120px;width:800px;">
+    <div class="reveal" style="background:rgba(239,68,68,0.08);border:2px solid rgba(239,68,68,0.4);padding:48px;margin-bottom:20px;">
+      <div style="font-family:var(--font-h);font-size:26px;color:var(--red);margin-bottom:20px;">⚠ Without Guardrail</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div style="padding:20px;background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.2);">
+          <div style="font-family:var(--font-h);font-size:40px;color:var(--red)">21</div>
+          <div style="font-family:var(--font-b);font-size:17px;color:var(--muted)">neg-price DR hours</div>
+        </div>
+        <div style="padding:20px;background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.2);">
+          <div style="font-family:var(--font-h);font-size:40px;color:var(--red)">+7%</div>
+          <div style="font-family:var(--font-b);font-size:17px;color:var(--muted)">raw cost reduction (misleading)</div>
+        </div>
+      </div>
+    </div>
+    <div class="reveal" style="background:rgba(34,197,94,0.06);border:2px solid rgba(34,197,94,0.3);padding:48px;">
+      <div style="font-family:var(--font-h);font-size:26px;color:var(--green);margin-bottom:20px;">✓ With Guardrail (Baseline)</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div style="padding:20px;background:rgba(34,197,94,0.06);border:1px solid rgba(34,197,94,0.2);">
+          <div style="font-family:var(--font-h);font-size:40px;color:var(--green)">0</div>
+          <div style="font-family:var(--font-b);font-size:17px;color:var(--muted)">neg-price DR violations</div>
+        </div>
+        <div style="padding:20px;background:rgba(34,197,94,0.06);border:1px solid rgba(34,197,94,0.2);">
+          <div style="font-family:var(--font-h);font-size:40px;color:var(--green)">8/8</div>
+          <div style="font-family:var(--font-b);font-size:17px;color:var(--muted)">L4 mechanism checks</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     SLIDE 20 — API LAYER
+     ═══════════════════════════════════════════════════════ -->
+<section class="slide" data-title="API Layer">
+  <div class="wm">20</div>
+  <div style="position:absolute;left:100px;top:100px;">
+    <div class="slide-eyebrow reveal">Step 5 — Production</div>
+    <h2 class="slide-title reveal">FastAPI Interface Layer</h2>
+  </div>
+  <div style="position:absolute;left:80px;right:80px;top:320px;bottom:80px;display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+    <div style="display:flex;flex-direction:column;gap:20px;">
+      <div class="code-block reveal" style="font-size:20px;">
+        <div class="cb-lang">POST</div>
+        <span class="tok-m">POST</span> <span class="tok-p">/upload</span><br>
+        <span class="tok-c">— Upload raw CSV (any column names)</span><br>
+        <span class="tok-c">— ?preprocess=true triggers Claude agent</span><br>
+        <span class="tok-k">Returns:</span> <span class="tok-v">file_id, rows, columns,</span><br>
+        <span style="padding-left:60px;"></span><span class="tok-v">quality_report, briefing</span>
+      </div>
+      <div class="code-block reveal" style="font-size:20px;">
+        <div class="cb-lang">POST</div>
+        <span class="tok-m">POST</span> <span class="tok-p">/run_pipeline</span><br>
+        <span class="tok-c">— Triggers 6-step pipeline async</span><br>
+        <span class="tok-c">— Supports config_overrides per request</span><br>
+        <span class="tok-k">Returns:</span> <span class="tok-v">{ job_id, status: "queued" }</span>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:20px;">
+      <div class="code-block reveal" style="font-size:20px;">
+        <div class="cb-lang">GET</div>
+        <span class="tok-m">GET</span> <span class="tok-p">/pipeline/status/{job_id}</span><br>
+        <span class="tok-c">— Poll background job progress</span><br>
+        <span class="tok-k">Returns:</span> <span class="tok-v">status, logs[], finished_at</span>
+      </div>
+      <div class="code-block reveal" style="font-size:20px;">
+        <div class="cb-lang">GET</div>
+        <span class="tok-m">GET</span> <span class="tok-p">/get_schedule?fmt=json</span><br>
+        <span class="tok-c">— Latest optimized DR schedule</span><br>
+        <span class="tok-k">Returns:</span> <span class="tok-v">schedule[], n_hours,</span><br>
+        <span style="padding-left:60px;"></span><span class="tok-v">q_DA_optimal, price_p10/p50/p90</span>
+      </div>
+      <div class="code-block reveal" style="font-size:20px;">
+        <div class="cb-lang">GET</div>
+        <span class="tok-m">GET</span> <span class="tok-p">/summary</span><br>
+        <span class="tok-c">— Cost savings &amp; evaluation summary</span><br>
+        <span class="tok-k">File:</span> <span class="tok-s">api/main.py</span> <span class="tok-c">· FastAPI + uvicorn</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     SLIDE 21 — ARCHITECTURE SUMMARY
+     ═══════════════════════════════════════════════════════ -->
+<section class="slide" data-title="System Architecture">
+  <div class="wm">21</div>
+  <div style="position:absolute;left:100px;top:100px;">
+    <div class="slide-eyebrow reveal">System Overview</div>
+    <h2 class="slide-title reveal">Full Architecture</h2>
+  </div>
+  <div style="position:absolute;left:80px;right:80px;top:320px;bottom:80px;display:grid;grid-template-columns:repeat(5,1fr);gap:3px;align-items:stretch;">
+    <div class="reveal" style="background:var(--card);border:1px solid var(--border);padding:28px 20px;display:flex;flex-direction:column;gap:16px;">
+      <div style="font-family:var(--font-h);font-size:18px;color:var(--orange);text-align:center;">DATA LAYER</div>
+      <div style="width:100%;height:2px;background:var(--orange);opacity:0.4;"></div>
+      <ul style="list-style:none;display:flex;flex-direction:column;gap:10px;">
+        <li style="font-family:var(--font-b);font-size:17px;color:var(--muted);padding:10px;background:var(--bg);border:1px solid var(--border);">OPSD import</li>
+        <li style="font-family:var(--font-b);font-size:17px;color:var(--muted);padding:10px;background:var(--bg);border:1px solid var(--border);">Claude preprocess agent</li>
+        <li style="font-family:var(--font-b);font-size:17px;color:var(--muted);padding:10px;background:var(--bg);border:1px solid var(--border);">30+ features</li>
+        <li style="font-family:var(--font-b);font-size:17px;color:var(--muted);padding:10px;background:var(--bg);border:1px solid var(--border);">DR baseline demand</li>
+      </ul>
+    </div>
+    <div class="reveal" style="background:var(--card);border:1px solid var(--border);padding:28px 20px;display:flex;flex-direction:column;gap:16px;">
+      <div style="font-family:var(--font-h);font-size:18px;color:var(--orange);text-align:center;">FORECAST</div>
+      <div style="width:100%;height:2px;background:var(--orange);opacity:0.4;"></div>
+      <ul style="list-style:none;display:flex;flex-direction:column;gap:10px;">
+        <li style="font-family:var(--font-b);font-size:17px;color:var(--muted);padding:10px;background:var(--bg);border:1px solid var(--border);">XGBoost (price)</li>
+        <li style="font-family:var(--font-b);font-size:17px;color:var(--muted);padding:10px;background:var(--bg);border:1px solid var(--border);">RF (load/renew.)</li>
+        <li style="font-family:var(--font-b);font-size:17px;color:var(--muted);padding:10px;background:var(--bg);border:1px solid var(--border);">Isotonic calibration</li>
+        <li style="font-family:var(--font-b);font-size:17px;color:var(--muted);padding:10px;background:var(--bg);border:1px solid var(--border);">H=24h horizon</li>
+      </ul>
+    </div>
+    <div class="reveal" style="background:var(--card);border:1px solid rgba(232,93,4,0.3);padding:28px 20px;display:flex;flex-direction:column;gap:16px;">
+      <div style="font-family:var(--font-h);font-size:18px;color:var(--orange);text-align:center;">SCENARIOS</div>
+      <div style="width:100%;height:2px;background:var(--orange);opacity:0.7;"></div>
+      <ul style="list-style:none;display:flex;flex-direction:column;gap:10px;">
+        <li style="font-family:var(--font-b);font-size:17px;color:var(--text);padding:10px;background:var(--bg);border:1px solid rgba(232,93,4,0.2);">48 scenarios/day</li>
+        <li style="font-family:var(--font-b);font-size:17px;color:var(--text);padding:10px;background:var(--bg);border:1px solid rgba(232,93,4,0.2);">Block bootstrap 24h</li>
+        <li style="font-family:var(--font-b);font-size:17px;color:var(--muted);padding:10px;background:var(--bg);border:1px solid var(--border);">P10/P50/P90 bands</li>
+        <li style="font-family:var(--font-b);font-size:17px;color:var(--muted);padding:10px;background:var(--bg);border:1px solid var(--border);">72.7% coverage</li>
+      </ul>
+    </div>
+    <div class="reveal" style="background:var(--card);border:1px solid var(--border);padding:28px 20px;display:flex;flex-direction:column;gap:16px;">
+      <div style="font-family:var(--font-h);font-size:18px;color:var(--orange);text-align:center;">OPTIMIZER</div>
+      <div style="width:100%;height:2px;background:var(--orange);opacity:0.4;"></div>
+      <ul style="list-style:none;display:flex;flex-direction:column;gap:10px;">
+        <li style="font-family:var(--font-b);font-size:17px;color:var(--muted);padding:10px;background:var(--bg);border:1px solid var(--border);">Scenario grid search</li>
+        <li style="font-family:var(--font-b);font-size:17px;color:var(--muted);padding:10px;background:var(--bg);border:1px solid var(--border);">Counterfactual model</li>
+        <li style="font-family:var(--font-b);font-size:17px;color:var(--muted);padding:10px;background:var(--bg);border:1px solid var(--border);">Neg-price guardrail</li>
+        <li style="font-family:var(--font-b);font-size:17px;color:var(--muted);padding:10px;background:var(--bg);border:1px solid var(--border);">L3/L4 evaluation</li>
+      </ul>
+    </div>
+    <div class="reveal" style="background:var(--card);border:1px solid var(--border);padding:28px 20px;display:flex;flex-direction:column;gap:16px;">
+      <div style="font-family:var(--font-h);font-size:18px;color:var(--orange);text-align:center;">API LAYER</div>
+      <div style="width:100%;height:2px;background:var(--orange);opacity:0.4;"></div>
+      <ul style="list-style:none;display:flex;flex-direction:column;gap:10px;">
+        <li style="font-family:var(--font-b);font-size:17px;color:var(--muted);padding:10px;background:var(--bg);border:1px solid var(--border);">FastAPI REST</li>
+        <li style="font-family:var(--font-b);font-size:17px;color:var(--muted);padding:10px;background:var(--bg);border:1px solid var(--border);">Background jobs</li>
+        <li style="font-family:var(--font-b);font-size:17px;color:var(--muted);padding:10px;background:var(--bg);border:1px solid var(--border);">Config overrides</li>
+        <li style="font-family:var(--font-b);font-size:17px;color:var(--muted);padding:10px;background:var(--bg);border:1px solid var(--border);">/docs auto-generated</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     SLIDE 22 — CONCLUSION
+     ═══════════════════════════════════════════════════════ -->
+<section class="slide" data-title="Conclusion">
+  <div class="wm">22</div>
+  <div style="position:absolute;left:80px;top:0;width:1120px;height:1080px;display:flex;flex-direction:column;justify-content:center;padding:0 80px 0 20px;">
+    <div class="slide-eyebrow reveal">Summary</div>
+    <h2 class="slide-title reveal">Four Key Findings</h2>
+    <div style="display:flex;flex-direction:column;gap:20px;margin-top:8px;">
+      <div class="reveal" style="display:flex;align-items:flex-start;gap:20px;padding:24px 28px;background:var(--card);border:1px solid var(--border);border-left:4px solid var(--orange);">
+        <span style="font-family:var(--font-h);font-size:32px;color:var(--orange);min-width:40px;">1</span>
+        <span style="font-family:var(--font-b);font-size:22px;line-height:1.5;color:var(--muted)"><strong style="color:var(--text)">Scenarios are the most critical module.</strong> Removing them drops cost reduction by 27.5% — probabilistic planning is not optional.</span>
+      </div>
+      <div class="reveal" style="display:flex;align-items:flex-start;gap:20px;padding:24px 28px;background:var(--card);border:1px solid var(--border);border-left:4px solid var(--orange);">
+        <span style="font-family:var(--font-h);font-size:32px;color:var(--orange);min-width:40px;">2</span>
+        <span style="font-family:var(--font-b);font-size:22px;line-height:1.5;color:var(--muted)"><strong style="color:var(--text)">XGBoost outperforms all baselines.</strong> 43% lower MAE than naïve, 15% lower than RF — justified by benchmark across 4 models.</span>
+      </div>
+      <div class="reveal" style="display:flex;align-items:flex-start;gap:20px;padding:24px 28px;background:var(--card);border:1px solid var(--border);border-left:4px solid var(--orange);">
+        <span style="font-family:var(--font-h);font-size:32px;color:var(--orange);min-width:40px;">3</span>
+        <span style="font-family:var(--font-b);font-size:22px;line-height:1.5;color:var(--muted)"><strong style="color:var(--text)">All 4 evaluation levels pass.</strong> L1 accuracy → L2 scenario quality → L3 decision performance → L4 mechanism validity: 8/8 checks, 0% violations.</span>
+      </div>
+      <div class="reveal" style="display:flex;align-items:flex-start;gap:20px;padding:24px 28px;background:var(--card);border:1px solid var(--border);border-left:4px solid var(--orange);">
+        <span style="font-family:var(--font-h);font-size:32px;color:var(--orange);min-width:40px;">4</span>
+        <span style="font-family:var(--font-b);font-size:22px;line-height:1.5;color:var(--muted)"><strong style="color:var(--text)">The pipeline is production-ready.</strong> FastAPI layer + Claude preprocessing agent + config-driven model selection = deployable B2B SaaS.</span>
+      </div>
+    </div>
+  </div>
+  <div class="orange-panel reveal-right">
+    <div style="position:absolute;top:0;left:0;right:0;bottom:0;display:flex;flex-direction:column;justify-content:center;padding:60px;">
+      <div style="font-family:var(--font-b);font-size:15px;font-weight:500;letter-spacing:0.15em;text-transform:uppercase;color:rgba(0,0,0,0.45);margin-bottom:28px;">Next Steps</div>
+      <div style="display:flex;flex-direction:column;gap:20px;">
+        <div style="font-family:var(--font-b);font-size:21px;color:#111;display:flex;gap:14px;align-items:flex-start;"><span style="color:rgba(0,0,0,0.35);">→</span><span>Multi-market support (FR, UK, NL)</span></div>
+        <div style="font-family:var(--font-b);font-size:21px;color:#111;display:flex;gap:14px;align-items:flex-start;"><span style="color:rgba(0,0,0,0.35);">→</span><span>Multi-tenant SaaS with Auth0 SSO</span></div>
+        <div style="font-family:var(--font-b);font-size:21px;color:#111;display:flex;gap:14px;align-items:flex-start;"><span style="color:rgba(0,0,0,0.35);">→</span><span>ENTSO-E live data connector</span></div>
+        <div style="font-family:var(--font-b);font-size:21px;color:#111;display:flex;gap:14px;align-items:flex-start;"><span style="color:rgba(0,0,0,0.35);">→</span><span>Claude daily briefing (node 2)</span></div>
+        <div style="font-family:var(--font-b);font-size:21px;color:#111;display:flex;gap:14px;align-items:flex-start;"><span style="color:rgba(0,0,0,0.35);">→</span><span>Quarterly XGBoost retraining</span></div>
+      </div>
+      <div style="margin-top:48px;padding-top:32px;border-top:1px solid rgba(0,0,0,0.15);">
+        <div style="font-family:var(--font-h);font-size:48px;letter-spacing:-2px;color:#111;">DR Compass</div>
+        <div style="font-family:var(--font-b);font-size:17px;color:rgba(0,0,0,0.5);margin-top:6px;">github.com/em879ma/DR-Electricity-Trading-System</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+</div><!-- end deck-viewport -->
+
+<script>
+/* =====================================================
+   SLIDE PRESENTATION CONTROLLER
+   ===================================================== */
+const SLIDE_TITLES = [
+  'Title','Agenda','The Problem','Dataset','Pipeline Overview',
+  'Feature Engineering','XGBoost Forecast','Forecast Benchmark','Forecast Calibration',
+  'Bootstrap Scenarios','Scenario Quality (L2)','DR Optimization',
+  'Decision Results (L3)','Mechanism Check (L4)','Ablation Overview',
+  'Ablation: No Scenarios','Ablation: Bootstrap Method','Ablation: Feature Groups',
+  'Ablation: No Guardrail','API Layer','System Architecture','Conclusion'
+];
+
+class SlidePresentation {
+  constructor() {
+    this.slides = Array.from(document.querySelectorAll('.slide'));
+    this.n = this.slides.length;
+    this.cur = 0;
+    this.stage = document.getElementById('deckStage');
+    this.counter = document.getElementById('slideCounter');
+    this.label = document.getElementById('slideLabel');
+    this.dotsEl = document.getElementById('navDots');
+
+    this._buildDots();
+    this._scaleStage();
+    window.addEventListener('resize', () => this._scaleStage());
+    document.addEventListener('keydown', e => this._onKey(e));
+    document.addEventListener('wheel', e => this._onWheel(e), { passive: false });
+    this._touch();
+    this.show(0);
+  }
+
+  _buildDots() {
+    this.slides.forEach((_, i) => {
+      const btn = document.createElement('button');
+      btn.className = 'nav-dot';
+      btn.title = `Slide ${i+1}: ${SLIDE_TITLES[i]}`;
+      btn.addEventListener('click', () => this.show(i));
+      this.dotsEl.appendChild(btn);
+    });
+  }
+
+  _scaleStage() {
+    const f = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+    const x = (window.innerWidth  - 1920 * f) / 2;
+    const y = (window.innerHeight - 1080 * f) / 2;
+    this.stage.style.transform = `translate(${x}px,${y}px) scale(${f})`;
+  }
+
+  show(i) {
+    i = Math.max(0, Math.min(i, this.n - 1));
+    this.slides.forEach((s, j) => {
+      const on = j === i;
+      s.classList.toggle('active', on);
+      // small delay so transition fires after display
+      if (on) requestAnimationFrame(() => s.classList.add('visible'));
+      else s.classList.remove('visible');
+    });
+    this.cur = i;
+    this.counter.textContent = `${String(i+1).padStart(2,'0')} / ${this.n}`;
+    this.label.textContent = SLIDE_TITLES[i] || '';
+    const dots = this.dotsEl.querySelectorAll('.nav-dot');
+    dots.forEach((d, j) => d.classList.toggle('active', j === i));
+  }
+
+  next() { this.show(this.cur + 1); }
+  prev() { this.show(this.cur - 1); }
+
+  _onKey(e) {
+    if (e.target.getAttribute && e.target.getAttribute('contenteditable')) return;
+    const map = {
+      'ArrowRight': () => this.next(),
+      'ArrowDown':  () => this.next(),
+      ' ':          () => this.next(),
+      'PageDown':   () => this.next(),
+      'ArrowLeft':  () => this.prev(),
+      'ArrowUp':    () => this.prev(),
+      'PageUp':     () => this.prev(),
+    };
+    if (map[e.key]) { e.preventDefault(); map[e.key](); }
+  }
+
+  _onWheel(e) {
+    e.preventDefault();
+    if (e.deltaY > 0) this.next(); else this.prev();
+  }
+
+  _touch() {
+    let sx = 0, sy = 0;
+    document.addEventListener('touchstart', e => {
+      sx = e.touches[0].clientX; sy = e.touches[0].clientY;
+    }, { passive: true });
+    document.addEventListener('touchend', e => {
+      const dx = e.changedTouches[0].clientX - sx;
+      const dy = e.changedTouches[0].clientY - sy;
+      if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 40) {
+        if (dx < 0) this.next(); else this.prev();
+      } else if (Math.abs(dy) > 40) {
+        if (dy < 0) this.next(); else this.prev();
+      }
+    }, { passive: true });
+  }
+}
+
+new SlidePresentation();
+</script>
+</body>
+</html>

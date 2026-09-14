@@ -45,6 +45,44 @@ RF_FEATURES = [
 ]
 
 
+# Pruned feature set — derived from outputs/diagnostic/forecast_diagnostic_report.md (v2.2).
+# Removed:
+#   - oversupply_index    (perfect mirror of net_load, ρ = −1.00)
+#   - price_lag_2         (ρ = 0.94 with price_lag_1)
+#   - renewable_lag_1     (ρ = 0.94 with renewable_share)
+#   - is_christmas_week   (ρ = 0.90 with is_christmas_week_lead_24)
+#   - load_lag_1          (SHAP ≈ 0.08, sub-threshold; load_lag_24 dominates)
+#   - is_weekend          (SHAP ≈ 0.01)
+#   - is_public_holiday   (SHAP ≈ 0.002 — lead_24 version is the predictive one)
+#   - negative_price_dummy_lag_24 (SHAP ≈ 0)
+#   - holiday_load_window (covered by lead_24 version)
+#   - rolling_price_std_24 (low SHAP, redundant with std_168)
+#   - rolling_load_mean_168 (correlated with rolling_load_mean_24)
+RF_FEATURES_PRUNED = [
+    "hour_sin", "hour_cos", "dayofweek", "month",
+    "price_lag_1", "price_lag_24", "price_lag_168",
+    "load_lag_24", "load_lag_168",
+    "renewable_lag_24",
+    "rolling_price_mean_24", "rolling_price_mean_168",
+    "rolling_price_std_168",
+    "rolling_load_mean_24",
+    "rolling_elasticity",
+    "net_load", "renewable_share", "scarcity_index",
+    "is_christmas_week_lead_24",
+    "is_public_holiday_lead_24",
+    "holiday_load_window_lead_24",
+]
+
+
+def get_feature_set(name: str = "full") -> list[str]:
+    """Return the feature list selected by config (`forecast.feature_set`)."""
+    if name in (None, "full", "default"):
+        return list(RF_FEATURES)
+    if name == "pruned":
+        return list(RF_FEATURES_PRUNED)
+    raise ValueError(f"Unknown feature set '{name}'. Use 'full' or 'pruned'.")
+
+
 # ---------------------------------------------------------------------------
 # Persistence and rolling-mean baselines
 # ---------------------------------------------------------------------------

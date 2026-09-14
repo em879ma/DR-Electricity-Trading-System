@@ -29,7 +29,7 @@ from sklearn.linear_model import Ridge
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 from sklearn.preprocessing import StandardScaler
 
-from src.forecasting import RF_FEATURES, fit_two_stage_price_forecast
+from src.forecasting import RF_FEATURES, fit_two_stage_price_forecast, get_feature_set
 
 try:
     import xgboost as xgb
@@ -43,7 +43,8 @@ try:
 except ImportError:
     _TORCH = False
 
-AVAILABLE_MODELS = ["two_stage_rf", "xgboost", "ridge", "lstm", "tcn"]
+AVAILABLE_MODELS = ["two_stage_rf", "xgboost", "ridge", "lstm", "tcn",
+                    "naive_seasonal", "regime_ensemble"]
 _HORIZON = 24
 
 
@@ -57,6 +58,7 @@ def fit_price_forecast(
     split: dict,
     rf_params: dict,
     horizon: int = _HORIZON,
+    feature_set: str = "full",
     **kwargs,
 ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, dict]:
     """
@@ -79,6 +81,7 @@ def fit_price_forecast(
     metrics      : summary dict (recall, precision, threshold, …)
     """
     _check_model(model_name)
+    kwargs["feature_set"] = feature_set
 
     if model_name == "two_stage_rf":
         return fit_two_stage_price_forecast(df, rf_params, split, horizon=horizon)
@@ -94,6 +97,13 @@ def fit_price_forecast(
 
     if model_name == "tcn":
         return _tcn_pipeline(df, split, rf_params, horizon, **kwargs)
+
+    if model_name == "naive_seasonal":
+        return _naive_seasonal_pipeline(df, split, rf_params, horizon, **kwargs)
+
+    if model_name == "regime_ensemble":
+        from src.ensemble import fit_regime_ensemble_pipeline
+        return fit_regime_ensemble_pipeline(df, split, rf_params, horizon, **kwargs)
 
 
 def available_models() -> list[str]:
@@ -113,11 +123,15 @@ def _check_model(name: str) -> None:
 # Shared helpers
 # ══════════════════════════════════════════════════════════════════════
 
-def _prep_tabular(df: pd.DataFrame, split: dict, horizon: int):
-    """Returns (feat_cols, train_df, valid_df, test_df)."""
+def _prep_tabular(df: pd.DataFrame, split: dict, horizon: int,
+                  feature_set: str = "full"):
+    """Returns (feat_cols, train_df, valid_df, test_df).
+
+    `feature_set='pruned'` uses the v2.2 diagnostic-driven reduced feature list.
+    """
     work = df.copy()
     work["target_price"] = work["price"].shift(-horizon)
-    feat_cols = [c for c in RF_FEATURES if c in work.columns]
+    feat_cols = [c for c in get_feature_set(feature_set) if c in work.columns]
     fit = (work[feat_cols + ["target_price", "datetime"]]
            .dropna()
            .reset_index(drop=True))
@@ -234,12 +248,13 @@ def _xgboost_pipeline(
     rf_params: dict,
     horizon: int,
     xgb_params: dict | None = None,
+    feature_set: str = "full",
     **_,
 ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, dict]:
     if not _XGB:
         raise ImportError("xgboost not installed. Run: pip install xgboost")
 
-    feat_cols, train, valid, test = _prep_tabular(df, split, horizon)
+    feat_cols, train, valid, test = _prep_tabular(df, split, horizon, feature_set)
     eval_data = pd.concat([valid, test]).reset_index(drop=True)
 
     params = xgb_params or {
@@ -287,9 +302,10 @@ def _ridge_pipeline(
     rf_params: dict,
     horizon: int,
     alpha: float = 10.0,
+    feature_set: str = "full",
     **_,
 ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, dict]:
-    feat_cols, train, valid, test = _prep_tabular(df, split, horizon)
+    feat_cols, train, valid, test = _prep_tabular(df, split, horizon, feature_set)
     eval_data = pd.concat([valid, test]).reset_index(drop=True)
 
     scaler = StandardScaler()
@@ -416,3 +432,54 @@ def _tcn_pipeline(
     neg_df = neg_df[neg_df["target_datetime"].isin(dt_arr)].reset_index(drop=True)
 
     return pred_df, acc_df, neg_df, {**clf_m, "mae": float(acc_df["mae"].iloc[0])}
+
+
+# ══════════════════════════════════════════════════════════════════════
+# Seasonal Naive pipeline (Lago et al. 2021 reference baseline)
+# ══════════════════════════════════════════════════════════════════════
+
+def _naive_seasonal_pipeline(
+    df: pd.DataFrame,
+    split: dict,
+    rf_params: dict,
+    horizon: int,
+    lag_hours: int = 168,
+    **_,
+) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, dict]:
+    """
+    Seasonal Naive: p̂(t+h) = p(t+h - 168h) — same hour, 7 days earlier.
+
+    This is the canonical EPF benchmark from Lago et al. (2021). All other
+    models report rMAE = MAE_model / MAE_naive against this baseline.
+    """
+    work = df.copy()
+    work["target_price"] = work["price"].shift(-horizon)
+    work["naive_forecast"] = work["price"].shift(lag_hours - horizon)
+
+    fit = (work[["datetime", "price", "target_price", "naive_forecast"]]
+           .dropna()
+           .reset_index(drop=True))
+    n = len(fit)
+    n_train = int(n * split["train_ratio"])
+    n_valid = int(n * (split["train_ratio"] + split.get("valid_ratio", 0.15)))
+    eval_data = fit.iloc[n_train:].reset_index(drop=True)
+
+    pred = eval_data["naive_forecast"].to_numpy()
+    pred_df = _make_pred_df(eval_data, pred, "naive_seasonal", horizon)
+    acc_df = _build_acc(pred_df, "naive_seasonal", horizon)
+
+    target_dt = (pd.to_datetime(eval_data["datetime"])
+                 + pd.to_timedelta(horizon, "h"))
+    p_neg = (eval_data["naive_forecast"] < 0).astype(float).to_numpy()
+    neg_df = pd.DataFrame({"target_datetime": target_dt, "p_negative_price": p_neg})
+
+    return pred_df, acc_df, neg_df, {
+        "mae": float(acc_df["mae"].iloc[0]),
+        "rmse": float(acc_df["rmse"].iloc[0]),
+        "lag_hours": lag_hours,
+    }
+
+
+def compute_rmae(model_mae: float, naive_mae: float) -> float:
+    """Relative MAE = MAE_model / MAE_naive. <1.0 means better than naive."""
+    return float(model_mae) / float(naive_mae + 1e-9)
